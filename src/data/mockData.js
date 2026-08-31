@@ -3,11 +3,11 @@
 // component code — components only consume the shapes defined below.
 
 export const impactStats = [
-  { id: 'people', label: 'People Helped', value: 48213, suffix: '+' },
-  { id: 'families', label: 'Families Supported', value: 9840, suffix: '+' },
-  { id: 'meals', label: 'Meals Provided', value: 312500, suffix: '+' },
-  { id: 'education', label: 'Education Opportunities', value: 6120, suffix: '+' },
-  { id: 'communities', label: 'Communities Reached', value: 187, suffix: '' },
+  { id: 'people', label: 'People Helped', value: 24, suffix: '+' },
+  { id: 'families', label: 'Families Supported', value: 12, suffix: '+' },
+  { id: 'meals', label: 'Meals Provided', value: 85, suffix: '+' },
+  { id: 'education', label: 'Education Opportunities', value: 18, suffix: '+' },
+  { id: 'communities', label: 'Communities Reached', value: 6, suffix: '' },
 ]
 
 export const howItWorks = [
