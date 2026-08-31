@@ -1,84 +1,277 @@
 import { useEffect, useState } from 'react'
-import { Cloud, Menu, X } from 'lucide-react'
-import { navLinks } from '../data/mockData.js'
-import { useToast } from './ui/Toast.jsx'
+import { Cloud, Menu, X, LogIn, UserPlus } from 'lucide-react'
+import { Link } from 'react-router-dom'
+
+const navLinks = [
+  {
+    label: 'Home',
+    href: '#home',
+  },
+  {
+    label: 'How It Works',
+    href: '#how-it-works',
+  },
+  {
+    label: 'Categories',
+    href: '#categories',
+  },
+  {
+    label: 'About',
+    href: '#about',
+  },
+]
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
-  const showToast = useToast()
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12)
+    const onScroll = () => {
+      setScrolled(window.scrollY > 12)
+    }
+
     onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+
+    window.addEventListener('scroll', onScroll, {
+      passive: true,
+    })
+
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+    }
   }, [])
+
+  const closeMenu = () => {
+    setOpen(false)
+  }
+
+  const handleNavClick = () => {
+    setOpen(false)
+  }
 
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-        scrolled ? 'glass shadow-card' : 'bg-transparent'
+        scrolled
+          ? 'glass shadow-card'
+          : 'bg-white/70 backdrop-blur-sm'
       }`}
     >
       <nav className="container-max flex items-center justify-between px-6 py-4 sm:px-10 lg:px-16">
-        <a href="#home" className="flex items-center gap-2 font-display text-lg font-extrabold text-deepsea">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-deepsea text-white">
-            <Cloud className="h-5 w-5" />
-          </span>
-          HopeCloud
-        </a>
 
+        {/* =========================
+            LOGO
+        ========================== */}
+        <Link
+          to="/"
+          className="group flex items-center gap-2 font-display text-lg font-extrabold text-deepsea"
+          aria-label="HopeCloud Home"
+        >
+          <span
+            className="flex h-10 w-10 items-center justify-center rounded-xl
+            bg-deepsea text-white shadow-soft
+            transition-all duration-300
+            group-hover:scale-110
+            group-hover:rotate-3
+            group-hover:shadow-glow"
+          >
+            <Cloud
+              className="h-5 w-5 transition-transform duration-300 group-hover:-translate-y-0.5"
+            />
+          </span>
+
+          <span className="transition-colors duration-300 group-hover:text-sky-600">
+            HopeCloud
+          </span>
+        </Link>
+
+
+        {/* =========================
+            DESKTOP NAVIGATION
+        ========================== */}
         <ul className="hidden items-center gap-1 lg:flex">
+
           {navLinks.map((link) => (
             <li key={link.href}>
-              <a href={link.href} className="btn-ghost">
+
+              <a
+                href={link.href}
+                className="group relative rounded-full px-4 py-2.5
+                font-display text-sm font-semibold text-deepsea
+                transition-all duration-300
+                hover:bg-sky-50
+                hover:text-sky-600"
+              >
                 {link.label}
+
+                {/* Animated underline */}
+                <span
+                  className="absolute bottom-1.5 left-1/2 h-0.5 w-0
+                  -translate-x-1/2 rounded-full bg-sky-500
+                  transition-all duration-300
+                  group-hover:w-5"
+                />
               </a>
+
             </li>
           ))}
+
         </ul>
 
-        <div className="hidden items-center gap-3 lg:flex">
-          <button onClick={() => showToast('Thanks for stepping up. Our Get Help intake opens right after the hackathon demo.', 'info')} className="btn-secondary">
-            Get Help
-          </button>
-          <button onClick={() => showToast('Thank you! Secure donations launch with our payments integration.')} className="btn-primary">
-            Donate
-          </button>
+
+        {/* =========================
+            DESKTOP AUTH ACTIONS
+        ========================== */}
+        <div className="hidden items-center gap-2 lg:flex">
+
+          {/* Sign In */}
+          <Link
+            to="/login"
+            className="inline-flex items-center gap-2
+            rounded-full px-4 py-2.5
+            font-display text-sm font-semibold text-deepsea
+            transition-all duration-300
+            hover:bg-sky-50
+            hover:text-sky-600
+            hover:-translate-y-0.5"
+          >
+            <LogIn className="h-4 w-4" />
+            Sign In
+          </Link>
+
+
+          {/* Join HopeCloud */}
+          <Link
+            to="/register"
+            className="group inline-flex items-center gap-2
+            rounded-full bg-deepsea
+            px-5 py-2.5
+            font-display text-sm font-semibold text-white
+            shadow-soft
+            transition-all duration-300
+            hover:bg-sky-600
+            hover:shadow-glow
+            hover:-translate-y-0.5
+            active:scale-[0.98]"
+          >
+            <UserPlus
+              className="h-4 w-4 transition-transform duration-300
+              group-hover:rotate-6"
+            />
+
+            Join HopeCloud
+          </Link>
+
         </div>
 
+
+        {/* =========================
+            MOBILE MENU BUTTON
+        ========================== */}
         <button
-          className="rounded-lg p-2 text-deepsea lg:hidden"
-          aria-label={open ? 'Close menu' : 'Open menu'}
+          type="button"
+          className="rounded-xl p-2.5 text-deepsea
+          transition-all duration-300
+          hover:bg-sky-50
+          hover:text-sky-600
+          lg:hidden"
+          aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
           aria-expanded={open}
-          onClick={() => setOpen((o) => !o)}
+          onClick={() => setOpen((value) => !value)}
         >
-          {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          {open ? (
+            <X className="h-6 w-6" />
+          ) : (
+            <Menu className="h-6 w-6" />
+          )}
         </button>
+
       </nav>
 
+
+      {/* =========================
+          MOBILE MENU
+      ========================== */}
       {open && (
-        <div className="glass border-t border-cloudline px-6 pb-6 pt-2 lg:hidden">
+        <div
+          className="border-t border-cloudline bg-white/95
+          px-6 pb-6 pt-4 shadow-card
+          backdrop-blur-xl
+          animate-fadeUp
+          lg:hidden"
+        >
+
+          {/* Mobile navigation */}
           <ul className="flex flex-col gap-1">
+
             {navLinks.map((link) => (
               <li key={link.href}>
-                <a href={link.href} onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2.5 font-display text-sm font-semibold text-deepsea hover:bg-sky-50">
+
+                <a
+                  href={link.href}
+                  onClick={handleNavClick}
+                  className="block rounded-xl px-4 py-3
+                  font-display text-sm font-semibold text-deepsea
+                  transition-all duration-300
+                  hover:bg-sky-50
+                  hover:text-sky-600
+                  hover:translate-x-1"
+                >
                   {link.label}
                 </a>
+
               </li>
             ))}
+
           </ul>
-          <div className="mt-4 flex flex-col gap-3">
-            <button onClick={() => { setOpen(false); showToast('Thanks for stepping up. Our Get Help intake opens right after the hackathon demo.', 'info') }} className="btn-secondary w-full">
-              Get Help
-            </button>
-            <button onClick={() => { setOpen(false); showToast('Thank you! Secure donations launch with our payments integration.') }} className="btn-primary w-full">
-              Donate
-            </button>
+
+
+          {/* Divider */}
+          <div className="my-4 h-px bg-cloudline" />
+
+
+          {/* Mobile authentication */}
+          <div className="grid grid-cols-2 gap-3">
+
+            <Link
+              to="/login"
+              onClick={closeMenu}
+              className="inline-flex items-center justify-center gap-2
+              rounded-xl border border-deepsea/15
+              bg-white px-4 py-3
+              font-display text-sm font-semibold text-deepsea
+              transition-all duration-300
+              hover:border-sky-400
+              hover:bg-sky-50
+              hover:text-sky-600"
+            >
+              <LogIn className="h-4 w-4" />
+              Sign In
+            </Link>
+
+
+            <Link
+              to="/register"
+              onClick={closeMenu}
+              className="inline-flex items-center justify-center gap-2
+              rounded-xl bg-deepsea
+              px-4 py-3
+              font-display text-sm font-semibold text-white
+              shadow-soft
+              transition-all duration-300
+              hover:bg-sky-600
+              hover:shadow-glow
+              active:scale-[0.98]"
+            >
+              <UserPlus className="h-4 w-4" />
+              Join Us
+            </Link>
+
           </div>
+
         </div>
       )}
+
     </header>
   )
 }

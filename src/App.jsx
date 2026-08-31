@@ -12,10 +12,17 @@ import VolunteerSection from './components/VolunteerSection.jsx'
 import EmergencySupport from './components/EmergencySupport.jsx'
 import Footer from './components/Footer.jsx'
 
-export default function App() {
+import Login from './pages/Login.jsx'
+import Register from './pages/Register.jsx'
+
+import { Routes, Route } from 'react-router-dom'
+
+
+function Home() {
   return (
-    <ToastProvider>
+    <>
       <Navbar />
+
       <main>
         <Hero />
         <ImpactStats />
@@ -28,7 +35,27 @@ export default function App() {
         <VolunteerSection />
         <EmergencySupport />
       </main>
+
       <Footer />
+    </>
+  )
+}
+
+
+export default function App() {
+  return (
+    <ToastProvider>
+
+      <Routes>
+
+        <Route path="/" element={<Home />} />
+
+        <Route path="/login" element={<Login />} />
+
+        <Route path="/register" element={<Register />} />
+
+      </Routes>
+
     </ToastProvider>
   )
 }

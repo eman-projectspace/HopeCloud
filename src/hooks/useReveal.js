@@ -1,10 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 
-/**
- * Returns a ref to attach to an element and a boolean that flips to true
- * once the element enters the viewport. Used to drive the `.reveal` /
- * `.is-visible` CSS transition pair without any animation library.
- */
 export default function useReveal(threshold = 0.2) {
   const ref = useRef(null)
   const [visible, setVisible] = useState(false)
