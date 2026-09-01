@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Cloud, Menu, X, LogIn, UserPlus } from 'lucide-react'
+import { Cloud, Menu, X, LogIn, UserPlus, LogOut } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 const navLinks = [
@@ -19,7 +19,7 @@ const navLinks = [
     label: 'About',
     href: '#about',
   },
-   {
+  {
     label: 'Contact',
     href: '#contact',
   },
@@ -28,6 +28,41 @@ const navLinks = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user')
+
+    if (storedUser) {
+      setUser(JSON.parse(storedUser))
+    }
+  }, [])
+
+  //
+  const handleLogout = async () => {
+    const token = localStorage.getItem('token')
+
+    try {
+      if (token) {
+        await fetch('http://127.0.0.1:8000/api/logout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        })
+      }
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+
+    setUser(null)
+    setOpen(false)
+  }
 
   useEffect(() => {
     const onScroll = () => {
@@ -55,11 +90,10 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? 'glass shadow-card'
-          : 'bg-white/70 backdrop-blur-sm'
-      }`}
+      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${scrolled
+        ? 'glass shadow-card'
+        : 'bg-white/70 backdrop-blur-sm'
+        }`}
     >
       <nav className="container-max flex items-center justify-between px-6 py-4 sm:px-10 lg:px-16">
 
@@ -128,43 +162,66 @@ export default function Navbar() {
         ========================== */}
         <div className="hidden items-center gap-2 lg:flex">
 
-          {/* Sign In */}
-          <Link
-            to="/login"
-            className="inline-flex items-center gap-2
-            rounded-full px-4 py-2.5
-            font-display text-sm font-semibold text-deepsea
-            transition-all duration-300
-            hover:bg-sky-50
-            hover:text-sky-600
-            hover:-translate-y-0.5"
-          >
-            <LogIn className="h-4 w-4" />
-            Sign In
-          </Link>
+          {user ? (
+            <>
+              <span className="px-4 py-2.5 font-display text-sm font-semibold text-deepsea">
+                Welcome, {user.name}
+              </span>
 
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="inline-flex items-center gap-2
+        rounded-full bg-deepsea
+        px-5 py-2.5
+        font-display text-sm font-semibold text-white
+        shadow-soft
+        transition-all duration-300
+        hover:bg-red-500
+        hover:shadow-glow
+        hover:-translate-y-0.5"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="inline-flex items-center gap-2
+        rounded-full px-4 py-2.5
+        font-display text-sm font-semibold text-deepsea
+        transition-all duration-300
+        hover:bg-sky-50
+        hover:text-sky-600
+        hover:-translate-y-0.5"
+              >
+                <LogIn className="h-4 w-4" />
+                Sign In
+              </Link>
 
-          {/* Join HopeCloud */}
-          <Link
-            to="/register"
-            className="group inline-flex items-center gap-2
-            rounded-full bg-deepsea
-            px-5 py-2.5
-            font-display text-sm font-semibold text-white
-            shadow-soft
-            transition-all duration-300
-            hover:bg-sky-600
-            hover:shadow-glow
-            hover:-translate-y-0.5
-            active:scale-[0.98]"
-          >
-            <UserPlus
-              className="h-4 w-4 transition-transform duration-300
-              group-hover:rotate-6"
-            />
-
-            Join HopeCloud
-          </Link>
+              <Link
+                to="/register"
+                className="group inline-flex items-center gap-2
+        rounded-full bg-deepsea
+        px-5 py-2.5
+        font-display text-sm font-semibold text-white
+        shadow-soft
+        transition-all duration-300
+        hover:bg-sky-600
+        hover:shadow-glow
+        hover:-translate-y-0.5
+        active:scale-[0.98]"
+              >
+                <UserPlus
+                  className="h-4 w-4 transition-transform duration-300
+          group-hover:rotate-6"
+                />
+                Join HopeCloud
+              </Link>
+            </>
+          )}
 
         </div>
 
