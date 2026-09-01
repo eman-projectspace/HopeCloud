@@ -13,11 +13,15 @@ const navLinks = [
   },
   {
     label: 'Categories',
-    href: '#categories',
+    href: '#causes',
   },
   {
     label: 'About',
     href: '#about',
+  },
+   {
+    label: 'Contact',
+    href: '#contact',
   },
 ]
 

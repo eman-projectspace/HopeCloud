@@ -6,9 +6,9 @@ import {
   Soup,
   Stethoscope,
   ArrowUpRight,
+  Gift,
 } from 'lucide-react'
 import { useToast } from './ui/Toast.jsx'
-
 const ICONS = { GraduationCap, Soup, Home, Stethoscope, Droplets, Briefcase }
 
 const ACCENTS = {
@@ -18,9 +18,15 @@ const ACCENTS = {
 }
 
 export default function CampaignCard({ cause }) {
-  const Icon = ICONS[cause.icon]
-  const accent = ACCENTS[cause.accent]
-  const pct = Math.min(100, Math.round((cause.raised / cause.goal) * 100))
+ const Icon = ICONS[cause.icon] || Gift
+const accent = ACCENTS[cause.accent] || ACCENTS.sky
+ const raised = cause.raised ?? 0
+const goal = cause.goal ?? 1000
+
+const pct = Math.min(
+  100,
+  Math.round((raised / goal) * 100)
+)
   const showToast = useToast()
 
   return (
@@ -37,17 +43,42 @@ export default function CampaignCard({ cause }) {
           <div className={`h-full rounded-full ${accent.bar}`} style={{ width: `${pct}%` }} />
         </div>
         <div className="mt-2 flex items-center justify-between font-mono text-[11px] text-slate-muted">
-          <span>${cause.raised.toLocaleString()} raised</span>
-          <span>{pct}% of ${cause.goal.toLocaleString()}</span>
+        <span>${raised.toLocaleString()} raised</span>
+<span>{pct}% of ${goal.toLocaleString()}</span>
         </div>
       </div>
 
-      <button
-        onClick={() => showToast(`Thanks for supporting ${cause.title}! Payment integration is coming next.`)}
-        className="mt-5 inline-flex items-center justify-center gap-1.5 rounded-full border border-deepsea/15 py-2.5 font-display text-sm font-semibold text-deepsea transition-colors group-hover:border-sky-400 group-hover:bg-sky-50"
-      >
-        Support this cause <ArrowUpRight className="h-4 w-4" />
-      </button>
+     <button
+  onClick={() =>
+    showToast(
+      'Please create an account first to support this cause.'
+    )
+  }
+  className="
+    mt-5
+    inline-flex
+    items-center
+    justify-center
+    gap-1.5
+    rounded-full
+    border
+    border-deepsea/15
+    py-2.5
+    font-display
+    text-sm
+    font-semibold
+    text-deepsea
+    transition-all
+    duration-300
+    hover:-translate-y-0.5
+    hover:border-sky-400
+    hover:bg-sky-50
+    hover:shadow-soft
+  "
+>
+  Support this cause
+  <ArrowUpRight className="h-4 w-4" />
+</button>
     </div>
   )
 }

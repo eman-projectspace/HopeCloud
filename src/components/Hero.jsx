@@ -205,27 +205,23 @@ export default function Hero() {
 
 
           {/* Main heading */}
-
-          <h1
-            className="
-              max-w-2xl
-              font-display
-              text-4xl
-              font-extrabold
-              leading-[1.05]
-              tracking-[-0.03em]
-              text-ink
-              sm:text-5xl
-              lg:text-6xl
-              xl:text-7xl
-            "
-          >
-            Give What You No Longer Need.
-
-            <span className="mt-2 block text-sky-500">
-              Give Someone Hope.
-            </span>
-          </h1>
+<h1
+  className="
+    max-w-2xl
+    font-display
+    text-3xl
+    font-extrabold
+    leading-[1.08]
+    tracking-[-0.025em]
+    text-ink
+    sm:text-4xl
+    md:text-5xl
+    lg:text-[3.4rem]
+    xl:text-[3.8rem]
+  "
+>
+ Turning Hope Into Action.
+</h1>
 
 
           {/* Description */}
