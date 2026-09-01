@@ -158,6 +158,31 @@ export default function Register() {
     return newErrors
   }
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault()
+
+  //   const validationErrors = validate()
+
+  //   if (Object.keys(validationErrors).length > 0) {
+  //     setErrors(validationErrors)
+  //     return
+  //   }
+
+  //   setErrors({})
+  //   setIsLoading(true)
+
+  //   /*
+  //     Frontend demo only.
+
+  //     Later this section will be replaced with
+  //     your backend registration API call.
+  //   */
+  //   await new Promise((resolve) => setTimeout(resolve, 1700))
+
+  //   setIsLoading(false)
+  //   setIsSuccess(true)
+  // }
+  // origial
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -171,18 +196,66 @@ export default function Register() {
     setErrors({})
     setIsLoading(true)
 
-    /*
-      Frontend demo only.
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          name: form.name.trim(),
+          email: form.email.trim(),
+          password: form.password,
+          password_confirmation: form.confirmPassword,
+        }),
+      })
 
-      Later this section will be replaced with
-      your backend registration API call.
-    */
-    await new Promise((resolve) => setTimeout(resolve, 1700))
+      const data = await response.json()
 
-    setIsLoading(false)
-    setIsSuccess(true)
+      if (!response.ok) {
+        if (data.errors) {
+          const backendErrors = {}
+
+          if (data.errors.name) {
+            backendErrors.name = data.errors.name[0]
+          }
+
+          if (data.errors.email) {
+            backendErrors.email = data.errors.email[0]
+          }
+
+          if (data.errors.password) {
+            backendErrors.password = data.errors.password[0]
+          }
+
+          setErrors(backendErrors)
+        } else {
+          setErrors({
+            email: data.message || 'Registration failed. Please try again.',
+          })
+        }
+
+        return
+      }
+
+      // Save authentication token
+      localStorage.setItem('token', data.token)
+
+      // Save user information
+      localStorage.setItem('user', JSON.stringify(data.user))
+
+      setIsSuccess(true)
+    } catch (error) {
+      console.error('Registration error:', error)
+
+      setErrors({
+        email: 'Unable to connect to the server. Please try again.',
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
-
   const handleContinue = () => {
     navigate('/login')
   }
@@ -563,11 +636,10 @@ export default function Register() {
                           text-sm text-ink outline-none
                           transition-all duration-300
                           placeholder:text-slate-400
-                          focus:ring-4 ${
-                            errors.name
+                          focus:ring-4 ${errors.name
                               ? 'border-red-300 focus:border-red-400 focus:ring-red-50'
                               : 'border-slate-200 focus:border-sky-400 focus:ring-sky-100 hover:border-sky-300'
-                          }`}
+                            }`}
                         />
 
                       </div>
@@ -622,11 +694,10 @@ export default function Register() {
                           text-sm text-ink outline-none
                           transition-all duration-300
                           placeholder:text-slate-400
-                          focus:ring-4 ${
-                            errors.email
+                          focus:ring-4 ${errors.email
                               ? 'border-red-300 focus:border-red-400 focus:ring-red-50'
                               : 'border-slate-200 focus:border-sky-400 focus:ring-sky-100 hover:border-sky-300'
-                          }`}
+                            }`}
                         />
 
                       </div>
@@ -679,11 +750,10 @@ export default function Register() {
                           text-sm text-ink outline-none
                           transition-all duration-300
                           placeholder:text-slate-400
-                          focus:ring-4 ${
-                            errors.password
+                          focus:ring-4 ${errors.password
                               ? 'border-red-300 focus:border-red-400 focus:ring-red-50'
                               : 'border-slate-200 focus:border-sky-400 focus:ring-sky-100 hover:border-sky-300'
-                          }`}
+                            }`}
                         />
 
                         <button
@@ -722,15 +792,14 @@ export default function Register() {
                             </span>
 
                             <span
-                              className={`text-xs font-bold ${
-                                passwordStrength.label === 'Strong'
-                                  ? 'text-meadow-600'
-                                  : passwordStrength.label === 'Good'
-                                    ? 'text-sky-600'
-                                    : passwordStrength.label === 'Fair'
-                                      ? 'text-amber-600'
-                                      : 'text-red-500'
-                              }`}
+                              className={`text-xs font-bold ${passwordStrength.label === 'Strong'
+                                ? 'text-meadow-600'
+                                : passwordStrength.label === 'Good'
+                                  ? 'text-sky-600'
+                                  : passwordStrength.label === 'Fair'
+                                    ? 'text-amber-600'
+                                    : 'text-red-500'
+                                }`}
                             >
                               {passwordStrength.label}
                             </span>
@@ -741,15 +810,14 @@ export default function Register() {
                           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
 
                             <div
-                              className={`h-full rounded-full transition-all duration-500 ${
-                                passwordStrength.label === 'Strong'
-                                  ? 'bg-meadow-500'
-                                  : passwordStrength.label === 'Good'
-                                    ? 'bg-sky-500'
-                                    : passwordStrength.label === 'Fair'
-                                      ? 'bg-amber-500'
-                                      : 'bg-red-400'
-                              }`}
+                              className={`h-full rounded-full transition-all duration-500 ${passwordStrength.label === 'Strong'
+                                ? 'bg-meadow-500'
+                                : passwordStrength.label === 'Good'
+                                  ? 'bg-sky-500'
+                                  : passwordStrength.label === 'Fair'
+                                    ? 'bg-amber-500'
+                                    : 'bg-red-400'
+                                }`}
                               style={{
                                 width: passwordStrength.width,
                               }}
@@ -840,11 +908,10 @@ export default function Register() {
                           text-sm text-ink outline-none
                           transition-all duration-300
                           placeholder:text-slate-400
-                          focus:ring-4 ${
-                            errors.confirmPassword
+                          focus:ring-4 ${errors.confirmPassword
                               ? 'border-red-300 focus:border-red-400 focus:ring-red-50'
                               : 'border-slate-200 focus:border-sky-400 focus:ring-sky-100 hover:border-sky-300'
-                          }`}
+                            }`}
                         />
 
                         <button
@@ -1053,19 +1120,17 @@ export default function Register() {
 function PasswordRequirement({ valid, text }) {
   return (
     <div
-      className={`flex items-center gap-1.5 text-[11px] transition-colors duration-300 ${
-        valid
-          ? 'text-meadow-600'
-          : 'text-slate-400'
-      }`}
+      className={`flex items-center gap-1.5 text-[11px] transition-colors duration-300 ${valid
+        ? 'text-meadow-600'
+        : 'text-slate-400'
+        }`}
     >
       <span
         className={`flex h-4 w-4 items-center justify-center
-        rounded-full transition-all duration-300 ${
-          valid
+        rounded-full transition-all duration-300 ${valid
             ? 'bg-meadow/15'
             : 'bg-slate-100'
-        }`}
+          }`}
       >
         <Check className="h-2.5 w-2.5" />
       </span>
