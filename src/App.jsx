@@ -1,5 +1,5 @@
 import { ToastProvider } from './components/ui/Toast.jsx'
-
+import ProtectedRoute from './components/ProtectedRoute.jsx'
 import Navbar from './components/Navbar.jsx'
 import Hero from './components/Hero.jsx'
 import ImpactStats from './components/ImpactStats.jsx'
@@ -81,17 +81,6 @@ function DashboardPlaceholder({ title, description }) {
 }
 
 
-/* Donate Page */
-
-function DonatePage() {
-  return (
-    <DashboardPlaceholder
-      title="Donate an Item"
-      description="Your donation form will be added here next. You will be able to donate clothes, books, children's items, and other useful resources with an image upload."
-    />
-  )
-}
-
 
 function App() {
   return (
@@ -116,39 +105,53 @@ function App() {
           element={<Register />}
         />
 
+        {/* Protected User Routes */}
 
-        {/* User Dashboard */}
+        <Route element={<ProtectedRoute />}>
 
-        <Route
-          path="/user-dashboard"
-          element={<UserDashboard />}
-        />
-           <Route
-  path="/user-dashboard/donations"
-  element={<MyDonations />}
-/>
-<Route path="/user-dashboard/impact" element={<MyImpact />} />
-  <Route path="/user-dashboard/profile" element={<MyProfile />} />
-<Route
-  path="/user-dashboard/achievements"
-  element={<Achievements />}
-/>
+          <Route
+            path="/user-dashboard"
+            element={<UserDashboard />}
+          />
 
-        <Route
-          path="/user-dashboard/settings"
-          element={
-            <DashboardPlaceholder
-              title="Settings"
-              description="Account preferences and dashboard settings will be available here."
-            />
-          }
-          
-        />
-        {/* Donation */}
-<Route
-  path="/donate"
-  element={<Donate />}
-/>
+          <Route
+            path="/user-dashboard/donations"
+            element={<MyDonations />}
+          />
+
+          <Route
+            path="/user-dashboard/impact"
+            element={<MyImpact />}
+          />
+
+          <Route
+            path="/user-dashboard/profile"
+            element={<MyProfile />}
+          />
+
+          <Route
+            path="/user-dashboard/achievements"
+            element={<Achievements />}
+          />
+
+          <Route
+            path="/user-dashboard/settings"
+            element={
+              <DashboardPlaceholder
+                title="Settings"
+                description="Account preferences and dashboard settings will be available here."
+              />
+            }
+          />
+
+          <Route
+            path="/donate"
+            element={<Donate />}
+          />
+
+        </Route>
+
+
 
       </Routes>
 
