@@ -76,10 +76,10 @@ export default function Donate() {
   const [condition, setCondition] = useState('Good')
   const [description, setDescription] = useState('')
   const [deliveryMethod, setDeliveryMethod] = useState('Pickup')
-const [pickupLocation, setPickupLocation] = useState('')
-const [dropOffLocation, setDropOffLocation] = useState('')
-const [date, setDate] = useState('')
-const [notes, setNotes] = useState('')
+  const [pickupLocation, setPickupLocation] = useState('')
+  const [dropOffLocation, setDropOffLocation] = useState('')
+  const [date, setDate] = useState('')
+  const [notes, setNotes] = useState('')
   const [image, setImage] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
   const [submitted, setSubmitted] = useState(false)
@@ -100,12 +100,61 @@ const [notes, setNotes] = useState('')
     setImagePreview(null)
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
 
-    setSubmitted(true)
-  }
+    try {
+      const token = localStorage.getItem('token')
 
+      if (!token) {
+        alert('Please login first.')
+        return
+      }
+
+      const location =
+        deliveryMethod === 'Pickup'
+          ? pickupLocation
+          : dropOffLocation
+
+      const donationData = {
+        title: itemName,
+        description: description,
+        category: category,
+        condition: condition,
+        location: location,
+        image: image ? image.name : null,
+      }
+
+      const response = await fetch(
+        'http://127.0.0.1:8000/api/donations',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(donationData),
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        console.log('Donation error:', data)
+        alert(data.message || 'Failed to submit donation.')
+        return
+      }
+
+      console.log('Donation created:', data)
+
+      setSubmitted(true)
+
+    } catch (error) {
+      console.error('Donation error:', error)
+      alert('Something went wrong. Make sure Laravel is running.')
+    }
+  }
   if (submitted) {
     return (
       <div className="min-h-screen bg-mist px-5 py-10 sm:px-8 lg:px-10">
@@ -346,10 +395,9 @@ const [notes, setNotes] = useState('')
                           text-left
                           transition-all
                           duration-300
-                          ${
-                            active
-                              ? 'border-deepsea bg-sky-50 shadow-sm'
-                              : 'border-cloudline bg-white hover:-translate-y-0.5 hover:border-sky-200 hover:bg-sky-50/50'
+                          ${active
+                            ? 'border-deepsea bg-sky-50 shadow-sm'
+                            : 'border-cloudline bg-white hover:-translate-y-0.5 hover:border-sky-200 hover:bg-sky-50/50'
                           }
                         `}
                       >
@@ -364,10 +412,9 @@ const [notes, setNotes] = useState('')
                               items-center
                               justify-center
                               rounded-xl
-                              ${
-                                active
-                                  ? 'bg-deepsea text-white'
-                                  : 'bg-mist text-sky-600'
+                              ${active
+                                ? 'bg-deepsea text-white'
+                                : 'bg-mist text-sky-600'
                               }
                             `}
                           >
@@ -734,144 +781,140 @@ const [notes, setNotes] = useState('')
 
               {/* Step 4 */}
 
-<div>
+              <div>
 
-  <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3">
 
-    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-deepsea text-xs font-bold text-white">
-      04
-    </span>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-deepsea text-xs font-bold text-white">
+                    04
+                  </span>
 
-    <div>
+                  <div>
 
-      <h2 className="font-display text-lg font-extrabold text-ink">
-        Delivery Details
-      </h2>
+                    <h2 className="font-display text-lg font-extrabold text-ink">
+                      Delivery Details
+                    </h2>
 
-      <p className="text-xs text-slate-muted">
-        Choose how your donation should reach us.
-      </p>
+                    <p className="text-xs text-slate-muted">
+                      Choose how your donation should reach us.
+                    </p>
 
-    </div>
+                  </div>
 
-  </div>
+                </div>
 
 
-  {/* Delivery method */}
+                {/* Delivery method */}
 
-  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
 
-    {/* Pickup */}
+                  {/* Pickup */}
 
-    <button
-      type="button"
-      onClick={() => {
-        setDeliveryMethod('Pickup')
-        setDropOffLocation('')
-      }}
-      className={`
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeliveryMethod('Pickup')
+                      setDropOffLocation('')
+                    }}
+                    className={`
         rounded-2xl
         border
         p-4
         text-left
         transition-all
-        ${
-          deliveryMethod === 'Pickup'
-            ? 'border-deepsea bg-sky-50 shadow-sm'
-            : 'border-cloudline bg-white hover:border-sky-200 hover:bg-sky-50/50'
-        }
+        ${deliveryMethod === 'Pickup'
+                        ? 'border-deepsea bg-sky-50 shadow-sm'
+                        : 'border-cloudline bg-white hover:border-sky-200 hover:bg-sky-50/50'
+                      }
       `}
-    >
+                  >
 
-      <MapPin
-        className={`
+                    <MapPin
+                      className={`
           h-5 w-5
-          ${
-            deliveryMethod === 'Pickup'
-              ? 'text-deepsea'
-              : 'text-slate-muted'
-          }
+          ${deliveryMethod === 'Pickup'
+                          ? 'text-deepsea'
+                          : 'text-slate-muted'
+                        }
         `}
-      />
+                    />
 
-      <p className="mt-3 text-sm font-bold text-ink">
-        Request Pickup
-      </p>
+                    <p className="mt-3 text-sm font-bold text-ink">
+                      Request Pickup
+                    </p>
 
-      <p className="mt-1 text-xs leading-relaxed text-slate-muted">
-        Our team collects the item from your location.
-      </p>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-muted">
+                      Our team collects the item from your location.
+                    </p>
 
-    </button>
+                  </button>
 
 
-    {/* Drop Off */}
+                  {/* Drop Off */}
 
-    <button
-      type="button"
-      onClick={() => {
-        setDeliveryMethod('Drop-off')
-        setPickupLocation('')
-      }}
-      className={`
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeliveryMethod('Drop-off')
+                      setPickupLocation('')
+                    }}
+                    className={`
         rounded-2xl
         border
         p-4
         text-left
         transition-all
-        ${
-          deliveryMethod === 'Drop-off'
-            ? 'border-deepsea bg-sky-50 shadow-sm'
-            : 'border-cloudline bg-white hover:border-sky-200 hover:bg-sky-50/50'
-        }
+        ${deliveryMethod === 'Drop-off'
+                        ? 'border-deepsea bg-sky-50 shadow-sm'
+                        : 'border-cloudline bg-white hover:border-sky-200 hover:bg-sky-50/50'
+                      }
       `}
-    >
+                  >
 
-      <Package
-        className={`
+                    <Package
+                      className={`
           h-5 w-5
-          ${
-            deliveryMethod === 'Drop-off'
-              ? 'text-deepsea'
-              : 'text-slate-muted'
-          }
+          ${deliveryMethod === 'Drop-off'
+                          ? 'text-deepsea'
+                          : 'text-slate-muted'
+                        }
         `}
-      />
+                    />
 
-      <p className="mt-3 text-sm font-bold text-ink">
-        Drop Off
-      </p>
+                    <p className="mt-3 text-sm font-bold text-ink">
+                      Drop Off
+                    </p>
 
-      <p className="mt-1 text-xs leading-relaxed text-slate-muted">
-        Choose a HopeCloud location to drop off your item.
-      </p>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-muted">
+                      Choose a HopeCloud location to drop off your item.
+                    </p>
 
-    </button>
+                  </button>
 
-  </div>
+                </div>
 
 
-  {/* Pickup OR Drop-off */}
+                {/* Pickup OR Drop-off */}
 
-  {deliveryMethod === 'Pickup' ? (
+                {deliveryMethod === 'Pickup' ? (
 
-    <div className="mt-5">
+                  <div className="mt-5">
 
-      <label className="text-xs font-bold text-ink">
-        Pickup Location
-      </label>
+                    <label className="text-xs font-bold text-ink">
+                      Pickup Location
+                    </label>
 
-      <div className="relative">
+                    <div className="relative">
 
-        <MapPin className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-muted" />
+                      <MapPin className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-muted" />
 
-        <input
-          required
-          type="text"
-          value={pickupLocation}
-          onChange={(e) => setPickupLocation(e.target.value)}
-          placeholder="Enter your complete pickup location"
-          className="
+                      <input
+                        required
+                        type="text"
+                        value={pickupLocation}
+                        onChange={(e) => setPickupLocation(e.target.value)}
+                        placeholder="Enter your complete pickup location"
+                        className="
             mt-2
             w-full
             rounded-xl
@@ -889,127 +932,125 @@ const [notes, setNotes] = useState('')
             focus:ring-4
             focus:ring-sky-100
           "
-        />
+                      />
 
-      </div>
+                    </div>
 
-      <p className="mt-1.5 text-[10px] text-slate-muted">
-        Please provide the location where our team can collect your donation.
-      </p>
+                    <p className="mt-1.5 text-[10px] text-slate-muted">
+                      Please provide the location where our team can collect your donation.
+                    </p>
 
-    </div>
+                  </div>
 
-  ) : (
+                ) : (
 
-    <div className="mt-5">
+                  <div className="mt-5">
 
-      <label className="text-xs font-bold text-ink">
-        Select Drop-off Location
-      </label>
+                    <label className="text-xs font-bold text-ink">
+                      Select Drop-off Location
+                    </label>
 
-      <p className="mt-1 text-[10px] text-slate-muted">
-        Choose a convenient HopeCloud location to drop off your item.
-      </p>
+                    <p className="mt-1 text-[10px] text-slate-muted">
+                      Choose a convenient HopeCloud location to drop off your item.
+                    </p>
 
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
 
-        {dropOffLocations.map((location) => {
+                      {dropOffLocations.map((location) => {
 
-          const active = dropOffLocation === location.name
+                        const active = dropOffLocation === location.name
 
-          return (
-            <button
-              key={location.name}
-              type="button"
-              onClick={() => setDropOffLocation(location.name)}
-              className={`
+                        return (
+                          <button
+                            key={location.name}
+                            type="button"
+                            onClick={() => setDropOffLocation(location.name)}
+                            className={`
                 rounded-2xl
                 border
                 p-4
                 text-left
                 transition-all
-                ${
-                  active
-                    ? 'border-deepsea bg-sky-50 shadow-sm'
-                    : 'border-cloudline bg-white hover:border-sky-200 hover:bg-sky-50/50'
-                }
+                ${active
+                                ? 'border-deepsea bg-sky-50 shadow-sm'
+                                : 'border-cloudline bg-white hover:border-sky-200 hover:bg-sky-50/50'
+                              }
               `}
-            >
+                          >
 
-              <div className="flex items-start gap-3">
+                            <div className="flex items-start gap-3">
 
-                <div
-                  className={`
+                              <div
+                                className={`
                     flex h-9 w-9 shrink-0 items-center justify-center rounded-xl
-                    ${
-                      active
-                        ? 'bg-deepsea text-white'
-                        : 'bg-sky-50 text-sky-600'
-                    }
+                    ${active
+                                    ? 'bg-deepsea text-white'
+                                    : 'bg-sky-50 text-sky-600'
+                                  }
                   `}
-                >
-                  <MapPin className="h-4 w-4" />
-                </div>
+                              >
+                                <MapPin className="h-4 w-4" />
+                              </div>
 
-                <div className="min-w-0 flex-1">
+                              <div className="min-w-0 flex-1">
 
-                  <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center justify-between gap-2">
 
-                    <p className="text-xs font-bold text-ink">
-                      {location.name}
-                    </p>
+                                  <p className="text-xs font-bold text-ink">
+                                    {location.name}
+                                  </p>
 
-                    {active && (
-                      <CheckCircle2 className="h-4 w-4 shrink-0 text-deepsea" />
-                    )}
+                                  {active && (
+                                    <CheckCircle2 className="h-4 w-4 shrink-0 text-deepsea" />
+                                  )}
+
+                                </div>
+
+                                <p className="mt-1 text-[10px] leading-relaxed text-slate-muted">
+                                  {location.address}
+                                </p>
+
+                                <span className="mt-2 inline-flex text-[10px] font-semibold text-sky-600">
+                                  View on Map →
+                                </span>
+
+                              </div>
+
+                            </div>
+
+                          </button>
+                        )
+
+                      })}
+
+                    </div>
 
                   </div>
 
-                  <p className="mt-1 text-[10px] leading-relaxed text-slate-muted">
-                    {location.address}
-                  </p>
-
-                  <span className="mt-2 inline-flex text-[10px] font-semibold text-sky-600">
-                    View on Map →
-                  </span>
-
-                </div>
-
-              </div>
-
-            </button>
-          )
-
-        })}
-
-      </div>
-
-    </div>
-
-  )}
+                )}
 
 
-  {/* Date + Notes */}
+                {/* Date + Notes */}
 
-  <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                <div className="mt-5 grid gap-5 sm:grid-cols-2">
 
-    {/* Date */}
+                  {/* Date */}
 
-    <div>
+                  <div>
 
-      <label className="text-xs font-bold text-ink">
-        Preferred Date
-      </label>
+                    <label className="text-xs font-bold text-ink">
+                      Preferred Date
+                    </label>
 
-      <div className="relative">
+                    <div className="relative">
 
-        <CalendarDays className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-muted" />
+                      <CalendarDays className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-muted" />
 
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="
+                      <input
+                        type="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        className="
             mt-2
             w-full
             rounded-xl
@@ -1025,27 +1066,27 @@ const [notes, setNotes] = useState('')
             focus:ring-4
             focus:ring-sky-100
           "
-        />
+                      />
 
-      </div>
+                    </div>
 
-    </div>
+                  </div>
 
 
-    {/* Notes */}
+                  {/* Notes */}
 
-    <div>
+                  <div>
 
-      <label className="text-xs font-bold text-ink">
-        Additional Notes
-      </label>
+                    <label className="text-xs font-bold text-ink">
+                      Additional Notes
+                    </label>
 
-      <input
-        type="text"
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        placeholder="Anything we should know?"
-        className="
+                    <input
+                      type="text"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Anything we should know?"
+                      className="
           mt-2
           w-full
           rounded-xl
@@ -1059,13 +1100,13 @@ const [notes, setNotes] = useState('')
           focus:ring-4
           focus:ring-sky-100
         "
-      />
+                    />
 
-    </div>
+                  </div>
 
-  </div>
+                </div>
 
-</div>
+              </div>
               {/* Submit */}
 
               <div className="mt-8 border-t border-cloudline pt-6">
