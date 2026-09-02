@@ -123,6 +123,11 @@ export default function Donate() {
         condition: condition,
         location: location,
         image: image ? image.name : null,
+
+        // New donation fields
+        quantity: Number(quantity),
+        preferred_date: date || null,
+        notes: notes || null,
       }
 
       const response = await fetch(
