@@ -10,6 +10,7 @@ import Stories from './components/Stories.jsx'
 import VolunteerSection from './components/VolunteerSection.jsx'
 import Footer from './components/Footer.jsx'
 import About from './components/About.jsx'
+
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Donate from './pages/user/Donate.jsx'
@@ -18,14 +19,18 @@ import MyDonations from './pages/user/MyDonations.jsx'
 import MyImpact from './pages/user/MyImpact.jsx'
 import MyProfile from './pages/user/MyProfile.jsx'
 import Achievements from './pages/user/Achievements.jsx'
-import { Routes, Route, Link } from 'react-router-dom'
 
+import AdminLogin from './pages/admin/AdminLogin.jsx'
+import AdminDashboard from './pages/admin/AdminDashboard.jsx'
+import AdminProfile from './pages/admin/AdminProfile.jsx'
+import AddAdmin from './pages/admin/AddAdmin.jsx'
+
+import { Routes, Route, Link } from 'react-router-dom'
 
 function Home() {
   return (
     <>
       <Navbar />
-
       <main>
         <Hero />
         <ImpactStats />
@@ -36,23 +41,17 @@ function Home() {
         <Stories />
         <VolunteerSection />
       </main>
-
       <Footer />
     </>
   )
 }
 
-
 /* Temporary Dashboard Page */
-
 function DashboardPlaceholder({ title, description }) {
   return (
     <div className="min-h-screen bg-mist">
-
       <div className="flex min-h-screen items-center justify-center px-6">
-
         <div className="w-full max-w-lg rounded-3xl border border-cloudline bg-white p-8 text-center shadow-card">
-
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
             <span className="text-2xl">✨</span>
           </div>
@@ -71,24 +70,18 @@ function DashboardPlaceholder({ title, description }) {
           >
             Back to Dashboard
           </Link>
-
         </div>
-
       </div>
-
     </div>
   )
 }
 
-
-
 function App() {
   return (
     <ToastProvider>
-
       <Routes>
 
-        {/* Public */}
+        {/* Public Routes */}
 
         <Route
           path="/"
@@ -151,10 +144,36 @@ function App() {
 
         </Route>
 
+        {/* Admin Routes */}
 
+        <Route
+          path="/admindashboard"
+          element={
+            localStorage.getItem('hopecloud_admin_logged_in') === 'true'
+              ? <AdminDashboard />
+              : <AdminLogin />
+          }
+        />
+
+        <Route
+          path="/admin/profile"
+          element={
+            localStorage.getItem('hopecloud_admin_logged_in') === 'true'
+              ? <AdminProfile />
+              : <AdminLogin />
+          }
+        />
+
+        <Route
+          path="/admin/add-admin"
+          element={
+            localStorage.getItem('hopecloud_admin_logged_in') === 'true'
+              ? <AddAdmin />
+              : <AdminLogin />
+          }
+        />
 
       </Routes>
-
     </ToastProvider>
   )
 }
