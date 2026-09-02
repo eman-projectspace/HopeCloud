@@ -14,7 +14,6 @@ export default function UserDashboard() {
       <DashboardSidebar />
 
       <div className="lg:ml-64">
-
         <DashboardHeader />
 
         <main className="px-5 py-6 sm:px-8 lg:px-10">
