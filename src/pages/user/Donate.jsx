@@ -116,18 +116,25 @@ export default function Donate() {
           ? pickupLocation
           : dropOffLocation
 
-      const donationData = {
-        title: itemName,
-        description: description,
-        category: category,
-        condition: condition,
-        location: location,
-        image: image ? image.name : null,
+      const formData = new FormData()
 
-        // New donation fields
-        quantity: Number(quantity),
-        preferred_date: date || null,
-        notes: notes || null,
+      formData.append('title', itemName)
+      formData.append('description', description)
+      formData.append('category', category)
+      formData.append('condition', condition)
+      formData.append('location', location)
+      formData.append('quantity', quantity)
+
+      if (date) {
+        formData.append('preferred_date', date)
+      }
+
+      if (notes) {
+        formData.append('notes', notes)
+      }
+
+      if (image) {
+        formData.append('image', image)
       }
 
       const response = await fetch(
@@ -135,12 +142,12 @@ export default function Donate() {
         {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
             Accept: 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(donationData),
+          body: formData,
         }
+
       )
 
       const data = await response.json()
