@@ -1,39 +1,58 @@
 import {
   Package,
-  CheckCircle2,
-  Truck,
-  Clock3,
   ArrowRight,
 } from 'lucide-react'
 
-const donations = [
-  {
-    item: 'Children Story Books',
-    category: 'Books',
-    date: 'Aug 24, 2026',
-    status: 'Delivered',
-    icon: CheckCircle2,
-    statusClass: 'text-meadow-600 bg-meadow-500/10',
-  },
-  {
-    item: 'Winter Clothes',
-    category: 'Clothes',
-    date: 'Aug 19, 2026',
-    status: 'In Transit',
-    icon: Truck,
-    statusClass: 'text-sky-600 bg-sky-50',
-  },
-  {
-    item: 'School Supplies',
-    category: 'Kids Essentials',
-    date: 'Aug 12, 2026',
-    status: 'Processing',
-    icon: Clock3,
-    statusClass: 'text-amber-600 bg-amber-100',
-  },
-]
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { apiUrl } from '../../config/api'
+
+
 
 export default function DonationOverview() {
+  const navigate = useNavigate()
+  const [donations, setDonations] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchDonations = async () => {
+      try {
+        const token = localStorage.getItem('token')
+
+        const response = await fetch(apiUrl('/my-impact'), {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch donations')
+        }
+
+        const data = await response.json()
+
+        setDonations(data.impact?.recent_donations || [])
+      } catch (error) {
+        console.error('Failed to load recent donations:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchDonations()
+  }, [])
+
+  const formatDate = (date) => {
+    if (!date) return '—'
+
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
+  }
+
   return (
     <section className="rounded-2xl border border-cloudline bg-white shadow-card">
 
@@ -51,7 +70,10 @@ export default function DonationOverview() {
 
         </div>
 
-        <button className="inline-flex items-center gap-1 text-xs font-bold text-sky-600 hover:text-deepsea">
+        <button
+          onClick={() => navigate('/my-donations')}
+          className="inline-flex items-center gap-1 text-xs font-bold text-sky-600 hover:text-deepsea"
+        >
           View All
           <ArrowRight className="h-3.5 w-3.5" />
         </button>
@@ -77,11 +99,9 @@ export default function DonationOverview() {
           <tbody>
 
             {donations.map((donation) => {
-              const Icon = donation.icon
-
               return (
                 <tr
-                  key={donation.item}
+                  key={donation.id}
                   className="border-b border-cloudline last:border-0 transition-colors hover:bg-mist/60"
                 >
 
@@ -94,7 +114,7 @@ export default function DonationOverview() {
                       </div>
 
                       <span className="text-sm font-semibold text-ink">
-                        {donation.item}
+                        {donation.title}
                       </span>
 
                     </div>
@@ -106,26 +126,26 @@ export default function DonationOverview() {
                   </td>
 
                   <td className="px-6 py-4 text-xs text-slate-muted">
-                    {donation.date}
+                    {formatDate(donation.created_at)}
                   </td>
 
                   <td className="px-6 py-4">
 
                     <span
-                      className={`
-                        inline-flex
-                        items-center
-                        gap-1.5
-                        rounded-full
-                        px-3
-                        py-1.5
-                        text-[10px]
-                        font-bold
-                        ${donation.statusClass}
-                      `}
+                      className="
+    inline-flex
+    items-center
+    gap-1.5
+    rounded-full
+    bg-sky-50
+    px-3
+    py-1.5
+    text-[10px]
+    font-bold
+    text-sky-600
+  "
                     >
-                      <Icon className="h-3.5 w-3.5" />
-                      {donation.status}
+                      Submitted
                     </span>
 
                   </td>
@@ -146,11 +166,10 @@ export default function DonationOverview() {
       <div className="divide-y divide-cloudline md:hidden">
 
         {donations.map((donation) => {
-          const Icon = donation.icon
 
           return (
             <div
-              key={donation.item}
+              key={donation.id}
               className="p-5"
             >
 
@@ -165,11 +184,11 @@ export default function DonationOverview() {
                   <div>
 
                     <p className="text-sm font-bold text-ink">
-                      {donation.item}
+                      {donation.title}
                     </p>
 
                     <p className="mt-1 text-xs text-slate-muted">
-                      {donation.category} · {donation.date}
+                      {donation.category} · {formatDate(donation.created_at)}
                     </p>
 
                   </div>
@@ -177,21 +196,20 @@ export default function DonationOverview() {
                 </div>
 
                 <span
-                  className={`
-                    inline-flex
-                    shrink-0
-                    items-center
-                    gap-1
-                    rounded-full
-                    px-2
-                    py-1
-                    text-[9px]
-                    font-bold
-                    ${donation.statusClass}
-                  `}
+                  className="
+    inline-flex
+    items-center
+    gap-1.5
+    rounded-full
+    bg-sky-50
+    px-3
+    py-1.5
+    text-[10px]
+    font-bold
+    text-sky-600
+  "
                 >
-                  <Icon className="h-3 w-3" />
-                  {donation.status}
+                  Submitted
                 </span>
 
               </div>
