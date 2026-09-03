@@ -9,6 +9,7 @@ import {
   Gift,
   X,
 } from 'lucide-react'
+
 import { apiUrl } from '../../config/api'
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
@@ -44,6 +45,14 @@ const menuItems = [
 export default function DashboardSidebar() {
   const [open, setOpen] = useState(false)
 
+  const [user] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user')) || null
+    } catch {
+      return null
+    }
+  })
+
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -75,6 +84,13 @@ export default function DashboardSidebar() {
     navigate('/donate')
     setOpen(false)
   }
+
+  const userInitials =
+    user?.name
+      ?.split(' ')
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase() || 'U'
 
   return (
     <>
@@ -179,6 +195,7 @@ export default function DashboardSidebar() {
 
           <div className="flex items-center gap-3">
 
+            {/* User Initials */}
             <div
               className="
                 flex
@@ -194,13 +211,14 @@ export default function DashboardSidebar() {
                 text-deepsea
               "
             >
-              FF
+              {userInitials}
             </div>
 
+            {/* User Information */}
             <div className="min-w-0">
 
               <p className="truncate font-display text-sm font-bold text-ink">
-                Faryal Fatima
+                {user?.name || 'User'}
               </p>
 
               <p className="text-xs text-slate-muted">
@@ -226,7 +244,6 @@ export default function DashboardSidebar() {
             {menuItems.map((item) => {
               const Icon = item.icon
 
-              // Check current URL
               const isActive = location.pathname === item.path
 
               return (
@@ -337,8 +354,13 @@ export default function DashboardSidebar() {
 
         <div className="border-t border-cloudline p-4">
 
+          {/* Settings */}
+
           <button
-            onClick={() => navigate('/user-dashboard/settings')}
+            onClick={() => {
+              setOpen(false)
+              navigate('/user-dashboard/settings')
+            }}
             className="
               flex
               w-full
@@ -358,6 +380,8 @@ export default function DashboardSidebar() {
             <Settings className="h-[18px] w-[18px]" />
             Settings
           </button>
+
+          {/* Sign Out */}
 
           <button
             onClick={handleSignOut}

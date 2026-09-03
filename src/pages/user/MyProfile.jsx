@@ -13,50 +13,138 @@ import {
   Pencil,
   Camera,
   CheckCircle2,
-  Settings,
 } from 'lucide-react'
 
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { apiUrl } from '../../config/api'
 
 export default function MyProfile() {
+  const [user, setUser] = useState(null)
+  const [impact, setImpact] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [showEditMessage, setShowEditMessage] = useState(false)
 
-  const profile = {
-    name: 'Faryal Fatima',
-    email: 'faryal@example.com',
-    phone: '+92 300 1234567',
-    location: 'Lahore, Pakistan',
-    memberSince: 'June 2026',
-    role: 'HopeCloud Member',
-    initials: 'FF',
-  }
+  useEffect(() => {
+    const loadProfile = async () => {
+      const token = localStorage.getItem('token')
+
+      if (!token) {
+        setLoading(false)
+        return
+      }
+
+      try {
+        // Load cached user first
+        try {
+          const savedUser = JSON.parse(
+            localStorage.getItem('user')
+          )
+
+          if (savedUser) {
+            setUser(savedUser)
+          }
+        } catch {
+          // Ignore invalid localStorage data
+        }
+
+        // Get authenticated user from Laravel
+        const userResponse = await fetch(apiUrl('/user'), {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (userResponse.ok) {
+          const userData = await userResponse.json()
+
+          const currentUser = userData.user || userData
+
+          setUser(currentUser)
+
+          localStorage.setItem(
+            'user',
+            JSON.stringify(currentUser)
+          )
+        }
+
+        // Get real contribution data
+        const impactResponse = await fetch(
+          apiUrl('/my-impact'),
+          {
+            headers: {
+              Accept: 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+
+        if (impactResponse.ok) {
+          const impactData = await impactResponse.json()
+
+          setImpact(impactData.impact || null)
+        }
+      } catch (error) {
+        console.error('Failed to load profile:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadProfile()
+  }, [])
+
+  const profileName = user?.name || 'User'
+  const profileEmail = user?.email || 'No email available'
+
+  const userInitials =
+    profileName
+      ?.split(' ')
+      .filter(Boolean)
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase() || 'U'
+
+  const totalDonations = impact?.total_donations ?? 0
+  const totalItems = impact?.total_items ?? 0
+  const impactScore = impact?.impact_score ?? 0
+
+  const memberSince = user?.created_at
+    ? new Date(user.created_at).toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric',
+    })
+    : 'Not available'
+
+  const phone = user?.phone || 'Not provided'
+  const location = user?.location || 'Not provided'
 
   const contributionStats = [
     {
       label: 'Items Donated',
-      value: '08',
+      value: totalItems,
       icon: Package,
       iconBg: 'bg-sky-50',
       iconColor: 'text-sky-600',
     },
     {
-      label: 'People Helped',
-      value: '24',
+      label: 'Total Donations',
+      value: totalDonations,
       icon: Heart,
       iconBg: 'bg-red-50',
       iconColor: 'text-red-500',
     },
     {
       label: 'Impact Score',
-      value: '82',
+      value: impactScore,
       icon: Award,
       iconBg: 'bg-amber-50',
       iconColor: 'text-amber-600',
     },
     {
-      label: 'Rating',
-      value: '4.8',
+      label: 'Contributor Rating',
+      value: 'Not rated',
       icon: Star,
       iconBg: 'bg-yellow-50',
       iconColor: 'text-yellow-500',
@@ -66,27 +154,27 @@ export default function MyProfile() {
   const accountDetails = [
     {
       label: 'Full Name',
-      value: profile.name,
+      value: profileName,
       icon: UserRound,
     },
     {
       label: 'Email Address',
-      value: profile.email,
+      value: profileEmail,
       icon: Mail,
     },
     {
       label: 'Phone Number',
-      value: profile.phone,
+      value: phone,
       icon: Phone,
     },
     {
       label: 'Location',
-      value: profile.location,
+      value: location,
       icon: MapPin,
     },
     {
       label: 'Member Since',
-      value: profile.memberSince,
+      value: memberSince,
       icon: CalendarDays,
     },
   ]
@@ -103,8 +191,6 @@ export default function MyProfile() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 sm:px-8 lg:px-10">
 
           <div className="flex items-center gap-4">
-
-            {/* Back to Dashboard */}
 
             <Link
               to="/user-dashboard"
@@ -127,9 +213,6 @@ export default function MyProfile() {
               <ArrowLeft className="h-5 w-5" />
             </Link>
 
-
-            {/* Page Title */}
-
             <div>
 
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-muted sm:text-xs">
@@ -143,7 +226,6 @@ export default function MyProfile() {
             </div>
 
           </div>
-
 
           {/* Edit Profile */}
 
@@ -177,7 +259,6 @@ export default function MyProfile() {
 
       </header>
 
-
       {/* =====================================================
           MAIN CONTENT
       ====================================================== */}
@@ -185,7 +266,6 @@ export default function MyProfile() {
       <main className="px-6 py-8 sm:px-8 lg:px-10 lg:py-10">
 
         <div className="mx-auto max-w-7xl">
-
 
           {/* =================================================
               PROFILE HERO
@@ -203,8 +283,6 @@ export default function MyProfile() {
               sm:p-9
             "
           >
-
-            {/* Decorative Background */}
 
             <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-sky-400/20 blur-3xl" />
 
@@ -238,10 +316,8 @@ export default function MyProfile() {
                       ring-white/10
                     "
                   >
-                    {profile.initials}
+                    {loading ? '...' : userInitials}
                   </div>
-
-                  {/* Online / Active indicator */}
 
                   <span
                     className="
@@ -259,38 +335,35 @@ export default function MyProfile() {
 
                 </div>
 
-
                 <div>
 
                   <div className="flex flex-wrap items-center gap-2">
 
                     <h2 className="font-display text-2xl font-extrabold sm:text-3xl">
-                      {profile.name}
+                      {loading ? 'Loading...' : profileName}
                     </h2>
 
                     <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold text-sky-100">
                       <CheckCircle2 className="h-3 w-3" />
-                      Verified
+                      Active
                     </span>
 
                   </div>
 
-
                   <p className="mt-1 text-sm text-blue-100">
-                    {profile.role}
+                    HopeCloud Member
                   </p>
-
 
                   <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-blue-100">
 
                     <span className="flex items-center gap-1.5">
                       <MapPin className="h-3.5 w-3.5" />
-                      {profile.location}
+                      {location}
                     </span>
 
                     <span className="flex items-center gap-1.5">
                       <CalendarDays className="h-3.5 w-3.5" />
-                      Member since {profile.memberSince}
+                      Member since {memberSince}
                     </span>
 
                   </div>
@@ -298,7 +371,6 @@ export default function MyProfile() {
                 </div>
 
               </div>
-
 
               {/* Rating */}
 
@@ -310,24 +382,23 @@ export default function MyProfile() {
 
                 <div className="mt-1 flex items-center gap-2">
 
-                  <Star className="h-5 w-5 fill-amber-300 text-amber-300" />
+                  <Star className="h-5 w-5 text-amber-300" />
 
-                  <span className="font-display text-2xl font-extrabold">
-                    4.8
-                  </span>
-
-                  <span className="text-xs text-blue-100">
-                    / 5.0
+                  <span className="font-display text-xl font-extrabold">
+                    Not rated
                   </span>
 
                 </div>
+
+                <p className="mt-1 text-xs text-blue-100">
+                  Feedback is not available yet.
+                </p>
 
               </div>
 
             </div>
 
           </section>
-
 
           {/* Mobile Edit Button */}
 
@@ -357,7 +428,6 @@ export default function MyProfile() {
             Edit Profile
           </button>
 
-
           {/* =================================================
               CONTRIBUTION STATS
           ================================================== */}
@@ -375,7 +445,6 @@ export default function MyProfile() {
               </h2>
 
             </div>
-
 
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
@@ -411,7 +480,6 @@ export default function MyProfile() {
 
                     </div>
 
-
                     <p className="mt-5 font-display text-3xl font-extrabold text-ink">
                       {stat.value}
                     </p>
@@ -422,20 +490,17 @@ export default function MyProfile() {
 
                   </div>
                 )
-
               })}
 
             </div>
 
           </section>
 
-
           {/* =================================================
               PROFILE + ACCOUNT INFORMATION
           ================================================== */}
 
           <div className="mt-8 grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
-
 
             {/* Personal Information */}
 
@@ -461,7 +526,6 @@ export default function MyProfile() {
 
               </div>
 
-
               <div className="grid gap-0 sm:grid-cols-2">
 
                 {accountDetails.map((detail, index) => {
@@ -476,15 +540,9 @@ export default function MyProfile() {
                         items-center
                         gap-4
                         p-5
-                        ${
-                          index < accountDetails.length - 1
-                            ? 'border-b border-cloudline'
-                            : ''
-                        }
-                        ${
-                          index === 1
-                            ? 'sm:border-b'
-                            : ''
+                        ${index < accountDetails.length - 1
+                          ? 'border-b border-cloudline'
+                          : ''
                         }
                       `}
                     >
@@ -492,7 +550,6 @@ export default function MyProfile() {
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mist text-slate-muted">
                         <Icon className="h-4 w-4" />
                       </div>
-
 
                       <div className="min-w-0">
 
@@ -508,13 +565,11 @@ export default function MyProfile() {
 
                     </div>
                   )
-
                 })}
 
               </div>
 
             </section>
-
 
             {/* Account Status */}
 
@@ -532,20 +587,18 @@ export default function MyProfile() {
 
               </div>
 
-
               <p className="mt-5 text-xs font-bold uppercase tracking-[0.15em] text-slate-muted">
                 Account Status
               </p>
 
               <h2 className="mt-1 font-display text-xl font-extrabold text-ink">
-                Your account is secure.
+                Your account is active.
               </h2>
 
               <p className="mt-2 text-xs leading-relaxed text-slate-muted">
-                Your HopeCloud account is active and ready for donations,
-                contributions, and community activities.
+                Your HopeCloud account is active and ready for donations
+                and contributions.
               </p>
-
 
               <div className="mt-5 space-y-3">
 
@@ -554,18 +607,17 @@ export default function MyProfile() {
                   <CheckCircle2 className="h-4 w-4 text-meadow-600" />
 
                   <span className="text-xs font-semibold text-ink">
-                    Email verified
+                    Account active
                   </span>
 
                 </div>
-
 
                 <div className="flex items-center gap-3 rounded-xl bg-mist p-3">
 
                   <ShieldCheck className="h-4 w-4 text-sky-600" />
 
                   <span className="text-xs font-semibold text-ink">
-                    Account protected
+                    Authentication protected
                   </span>
 
                 </div>
@@ -597,14 +649,13 @@ export default function MyProfile() {
                   </p>
 
                   <p className="mt-1 max-w-xl text-xs leading-relaxed text-slate-muted">
-                    Your profile is more than an account — it's a record
-                    of the positive change you're helping create.
+                    Your profile keeps track of your real HopeCloud
+                    contribution activity.
                   </p>
 
                 </div>
 
               </div>
-
 
               <Link
                 to="/user-dashboard"
@@ -636,11 +687,9 @@ export default function MyProfile() {
 
           </section>
 
-
         </div>
 
       </main>
-
 
       {/* =====================================================
           EDIT PROFILE MESSAGE
@@ -660,8 +709,9 @@ export default function MyProfile() {
             </h3>
 
             <p className="mt-2 text-center text-sm leading-relaxed text-slate-muted">
-              Profile editing will be connected with the backend API
-              once the authentication and user profile APIs are ready.
+              Profile editing is not connected yet. Your current
+              account information is loaded from the authenticated
+              HopeCloud account.
             </p>
 
             <button

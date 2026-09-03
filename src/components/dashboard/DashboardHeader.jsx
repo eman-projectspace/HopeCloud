@@ -1,43 +1,49 @@
 import {
   Bell,
-  Search,
   ChevronDown,
-  UserRound,
-  Package,
-  CheckCircle2,
+  Search,
   Settings,
+  UserRound,
   LogOut,
+  Menu,
 } from 'lucide-react'
+
 import { apiUrl } from '../../config/api'
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 export default function DashboardHeader() {
-  const [notificationOpen, setNotificationOpen] = useState(false)
-  const [profileOpen, setProfileOpen] = useState(false)
-
-  const notificationRef = useRef(null)
-  const profileRef = useRef(null)
-
   const navigate = useNavigate()
 
-  // Close dropdowns when clicking outside
+  const [user] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user')) || null
+    } catch {
+      return null
+    }
+  })
+
+  const [profileOpen, setProfileOpen] = useState(false)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const profileRef = useRef(null)
+  const notificationsRef = useRef(null)
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-
-      if (
-        notificationRef.current &&
-        !notificationRef.current.contains(event.target)
-      ) {
-        setNotificationOpen(false)
-      }
-
       if (
         profileRef.current &&
         !profileRef.current.contains(event.target)
       ) {
         setProfileOpen(false)
+      }
+
+      if (
+        notificationsRef.current &&
+        !notificationsRef.current.contains(event.target)
+      ) {
+        setNotificationsOpen(false)
       }
     }
 
@@ -47,12 +53,6 @@ export default function DashboardHeader() {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [])
-
-  const handleNavigation = (path) => {
-    navigate(path)
-    setProfileOpen(false)
-    setNotificationOpen(false)
-  }
 
   const handleSignOut = async () => {
     const token = localStorage.getItem('token')
@@ -74,354 +74,185 @@ export default function DashboardHeader() {
       localStorage.removeItem('user')
 
       setProfileOpen(false)
+
       navigate('/login')
     }
   }
 
-  return (
-    <header className="sticky top-0 z-20 border-b border-cloudline bg-white/80 backdrop-blur-xl">
+  const userInitials =
+    user?.name
+      ?.split(' ')
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase() || 'U'
 
+  return (
+    <header className="sticky top-0 z-30 border-b border-cloudline bg-white">
       <div className="flex h-20 items-center justify-between px-5 sm:px-8 lg:px-10">
 
-        {/* Search */}
+        {/* Left side */}
+        <div className="flex items-center gap-4">
 
-        <div className="hidden w-full max-w-sm md:block">
+          {/* Mobile menu */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="rounded-xl p-2 text-slate-muted hover:bg-mist hover:text-ink lg:hidden"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
 
-          <div className="flex items-center gap-3 rounded-xl bg-mist px-4 py-2.5">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-muted">
+              HopeCloud
+            </p>
 
-            <Search className="h-4 w-4 text-slate-muted" />
-
-            <input
-              type="text"
-              placeholder="Search your donations..."
-              className="
-                w-full
-                bg-transparent
-                text-sm
-                text-ink
-                outline-none
-                placeholder:text-slate-muted
-              "
-            />
-
+            <h1 className="font-display text-lg font-extrabold text-ink">
+              Donor Dashboard
+            </h1>
           </div>
 
         </div>
 
-        <div className="ml-auto flex items-center gap-3">
+        {/* Right side */}
+        <div className="flex items-center gap-3">
 
-          {/* Notification */}
+          {/* Search */}
+          <div className="hidden items-center rounded-xl border border-cloudline bg-mist px-3 py-2 md:flex">
+            <Search className="h-4 w-4 text-slate-muted" />
 
-          <div className="relative" ref={notificationRef}>
+            <input
+              type="text"
+              placeholder="Search..."
+              className="ml-2 w-32 bg-transparent text-sm outline-none placeholder:text-slate-muted"
+            />
+          </div>
 
+          {/* Notifications */}
+          <div
+            ref={notificationsRef}
+            className="relative"
+          >
             <button
-              onClick={() => {
-                setNotificationOpen((value) => !value)
-                setProfileOpen(false)
-              }}
-              className="
-                relative
-                flex
-                h-10
-                w-10
-                items-center
-                justify-center
-                rounded-xl
-                text-slate-muted
-                transition-all
-                hover:bg-sky-50
-                hover:text-deepsea
-              "
-              aria-label="Notifications"
+              type="button"
+              onClick={() =>
+                setNotificationsOpen(!notificationsOpen)
+              }
+              className="relative flex h-10 w-10 items-center justify-center rounded-xl text-slate-muted transition hover:bg-mist hover:text-ink"
             >
-
               <Bell className="h-5 w-5" />
 
-              {/* Notification Badge */}
-
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
-
+              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-sky-500" />
             </button>
 
-            {/* Notification Dropdown */}
+            {notificationsOpen && (
+              <div className="absolute right-0 mt-3 w-80 overflow-hidden rounded-2xl border border-cloudline bg-white shadow-card">
 
-            {notificationOpen && (
-              <div
-                className="
-                  absolute
-                  right-0
-                  top-14
-                  w-80
-                  overflow-hidden
-                  rounded-2xl
-                  border
-                  border-cloudline
-                  bg-white
-                  shadow-soft
-                "
-              >
+                <div className="border-b border-cloudline px-5 py-4">
+                  <p className="font-display text-sm font-bold text-ink">
+                    Notifications
+                  </p>
 
-                <div className="flex items-center justify-between border-b border-cloudline p-4">
-
-                  <div>
-
-                    <h3 className="font-display text-sm font-bold text-ink">
-                      Notifications
-                    </h3>
-
-                    <p className="mt-0.5 text-[10px] text-slate-muted">
-                      Recent updates
-                    </p>
-
-                  </div>
-
-                  <span className="rounded-full bg-red-50 px-2 py-1 text-[9px] font-bold text-red-500">
-                    2 New
-                  </span>
-
+                  <p className="mt-1 text-xs text-slate-muted">
+                    Your latest HopeCloud activity
+                  </p>
                 </div>
 
-                <div className="divide-y divide-cloudline">
+                <div className="px-5 py-6 text-center">
+                  <Bell className="mx-auto h-6 w-6 text-slate-muted" />
 
-                  <button
-                    onClick={() => handleNavigation('/user-dashboard/donations')}
-                    className="
-                      flex
-                      w-full
-                      gap-3
-                      p-4
-                      text-left
-                      transition-colors
-                      hover:bg-mist
-                    "
-                  >
+                  <p className="mt-3 text-sm font-semibold text-ink">
+                    No new notifications
+                  </p>
 
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
-                      <Package className="h-4 w-4" />
-                    </div>
-
-                    <div>
-
-                      <p className="text-xs font-bold text-ink">
-                        Your winter clothes are in transit
-                      </p>
-
-                      <p className="mt-1 text-[10px] leading-relaxed text-slate-muted">
-                        Your donation is on its way to the recipient.
-                      </p>
-
-                      <p className="mt-1 text-[9px] text-slate-muted">
-                        2 hours ago
-                      </p>
-
-                    </div>
-
-                  </button>
-
-                  <button
-                    onClick={() => handleNavigation('/user-dashboard/donations')}
-                    className="
-                      flex
-                      w-full
-                      gap-3
-                      p-4
-                      text-left
-                      transition-colors
-                      hover:bg-mist
-                    "
-                  >
-
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-meadow-500/10 text-meadow-600">
-                      <CheckCircle2 className="h-4 w-4" />
-                    </div>
-
-                    <div>
-
-                      <p className="text-xs font-bold text-ink">
-                        Donation successfully delivered
-                      </p>
-
-                      <p className="mt-1 text-[10px] leading-relaxed text-slate-muted">
-                        Your story books reached a child in need.
-                      </p>
-
-                      <p className="mt-1 text-[9px] text-slate-muted">
-                        Yesterday
-                      </p>
-
-                    </div>
-
-                  </button>
-
+                  <p className="mt-1 text-xs leading-relaxed text-slate-muted">
+                    New donation updates will appear here when available.
+                  </p>
                 </div>
-
-                <button
-                  onClick={() => setNotificationOpen(false)}
-                  className="
-                    w-full
-                    border-t
-                    border-cloudline
-                    px-4
-                    py-3
-                    text-xs
-                    font-bold
-                    text-sky-600
-                    transition-colors
-                    hover:bg-sky-50
-                  "
-                >
-                  Mark all as read
-                </button>
 
               </div>
             )}
-
           </div>
 
-
           {/* Profile */}
-
-          <div className="relative" ref={profileRef}>
-
+          <div
+            ref={profileRef}
+            className="relative"
+          >
             <button
-              onClick={() => {
-                setProfileOpen((value) => !value)
-                setNotificationOpen(false)
-              }}
-              className="
-                flex
-                items-center
-                gap-2
-                rounded-xl
-                px-2
-                py-1.5
-                transition-colors
-                hover:bg-mist
-              "
-              aria-expanded={profileOpen}
+              type="button"
+              onClick={() => setProfileOpen(!profileOpen)}
+              className="flex items-center gap-3 rounded-xl p-1.5 pr-2 transition hover:bg-mist"
             >
 
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-xs font-bold text-deepsea">
-                FF
+              {/* Initials */}
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100 text-sm font-bold text-sky-700">
+                {userInitials}
               </div>
 
+              {/* User information */}
               <div className="hidden text-left sm:block">
-
-                <p className="text-xs font-bold text-ink">
-                  Faryal Fatima
+                <p className="text-sm font-bold text-ink">
+                  {user?.name || 'User'}
                 </p>
 
-                <p className="text-[10px] text-slate-muted">
-                  Donor
+                <p className="text-[11px] text-slate-muted">
+                  HopeCloud Donor
                 </p>
-
               </div>
 
-              <ChevronDown
-                className={`
-                  hidden
-                  h-4
-                  w-4
-                  text-slate-muted
-                  transition-transform
-                  sm:block
-                  ${profileOpen ? 'rotate-180' : ''}
-                `}
-              />
+              <ChevronDown className="hidden h-4 w-4 text-slate-muted sm:block" />
 
             </button>
 
-
-            {/* Profile Dropdown */}
-
             {profileOpen && (
-              <div
-                className="
-                  absolute
-                  right-0
-                  top-14
-                  w-64
-                  overflow-hidden
-                  rounded-2xl
-                  border
-                  border-cloudline
-                  bg-white
-                  shadow-soft
-                "
-              >
+              <div className="absolute right-0 mt-3 w-64 overflow-hidden rounded-2xl border border-cloudline bg-white shadow-card">
 
-                {/* User Info */}
-
-                <div className="border-b border-cloudline p-4">
+                {/* Profile header */}
+                <div className="border-b border-cloudline px-4 py-4">
 
                   <div className="flex items-center gap-3">
 
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-sky-100 font-bold text-deepsea">
-                      FF
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-100 text-sm font-bold text-sky-700">
+                      {userInitials}
                     </div>
 
-                    <div>
-
-                      <p className="text-sm font-bold text-ink">
-                        Faryal Fatima
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-ink">
+                        {user?.name || 'User'}
                       </p>
 
-                      <p className="text-[10px] text-slate-muted">
-                        HopeCloud Donor
+                      <p className="truncate text-xs text-slate-muted">
+                        {user?.email || 'No email available'}
                       </p>
-
                     </div>
 
                   </div>
 
                 </div>
 
-
-                {/* Dropdown Links */}
-
+                {/* Menu */}
                 <div className="p-2">
 
                   <button
-                    onClick={() => handleNavigation('/user-dashboard/profile')}
-                    className="
-                      flex
-                      w-full
-                      items-center
-                      gap-3
-                      rounded-xl
-                      px-3
-                      py-2.5
-                      text-left
-                      text-xs
-                      font-semibold
-                      text-slate-muted
-                      transition-colors
-                      hover:bg-sky-50
-                      hover:text-deepsea
-                    "
+                    type="button"
+                    onClick={() => {
+                      setProfileOpen(false)
+                      navigate('/user-dashboard/profile')
+                    }}
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-ink transition hover:bg-mist"
                   >
                     <UserRound className="h-4 w-4" />
                     My Profile
                   </button>
 
                   <button
-                    onClick={() => handleNavigation('/user-dashboard/settings')}
-                    className="
-                      flex
-                      w-full
-                      items-center
-                      gap-3
-                      rounded-xl
-                      px-3
-                      py-2.5
-                      text-left
-                      text-xs
-                      font-semibold
-                      text-slate-muted
-                      transition-colors
-                      hover:bg-sky-50
-                      hover:text-deepsea
-                    "
+                    type="button"
+                    onClick={() => {
+                      setProfileOpen(false)
+                      navigate('/user-dashboard/profile')
+                    }}
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-ink transition hover:bg-mist"
                   >
                     <Settings className="h-4 w-4" />
                     Settings
@@ -429,28 +260,13 @@ export default function DashboardHeader() {
 
                 </div>
 
-
-                {/* Sign Out */}
-
+                {/* Logout */}
                 <div className="border-t border-cloudline p-2">
 
                   <button
+                    type="button"
                     onClick={handleSignOut}
-                    className="
-                      flex
-                      w-full
-                      items-center
-                      gap-3
-                      rounded-xl
-                      px-3
-                      py-2.5
-                      text-left
-                      text-xs
-                      font-semibold
-                      text-red-500
-                      transition-colors
-                      hover:bg-red-50
-                    "
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-red-600 transition hover:bg-red-50"
                   >
                     <LogOut className="h-4 w-4" />
                     Sign Out
@@ -460,13 +276,10 @@ export default function DashboardHeader() {
 
               </div>
             )}
-
           </div>
 
         </div>
-
       </div>
-
     </header>
   )
 }
