@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+
 import {
   ArrowLeft,
   Heart,
@@ -15,28 +17,85 @@ import {
 import { Link } from 'react-router-dom'
 
 export default function MyImpact() {
-  const impactScore = 82
+  const [impactData, setImpactData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    const fetchImpact = async () => {
+      try {
+        const token = localStorage.getItem('token')
+
+        const response = await fetch(
+          'http://127.0.0.1:8000/api/my-impact',
+          {
+            headers: {
+              Accept: 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch impact data')
+        }
+
+        const data = await response.json()
+
+        setImpactData(data.impact)
+      } catch (err) {
+        console.error(err)
+        setError('Unable to load your impact data.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchImpact()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-mist">
+        <p className="text-sm font-semibold text-slate-muted">
+          Loading your impact...
+        </p>
+      </div>
+    )
+  }
+
+  if (error || !impactData) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-mist">
+        <p className="text-sm font-semibold text-red-500">
+          {error || 'No impact data found.'}
+        </p>
+      </div>
+    )
+  }
+
+  const impactScore = impactData.impact_score
 
   const impactStats = [
     {
       label: 'People Helped',
-      value: '24',
+      value: impactData.total_donations,
       description: 'through your donations',
       icon: Users,
       iconBg: 'bg-sky-50',
       iconColor: 'text-sky-600',
     },
     {
-      label: 'Items Delivered',
-      value: '06',
-      description: 'successfully reached people',
+      label: 'Items Donated',
+      value: String(impactData.total_items).padStart(2, '0'),
+      description: 'items contributed',
       icon: PackageCheck,
       iconBg: 'bg-meadow-500/10',
       iconColor: 'text-meadow-600',
     },
     {
       label: 'Impact Score',
-      value: '82',
+      value: impactData.impact_score,
       description: 'out of 100',
       icon: Heart,
       iconBg: 'bg-red-50',
@@ -44,7 +103,7 @@ export default function MyImpact() {
     },
     {
       label: 'Impact Growth',
-      value: '+18%',
+      value: `+${impactData.impact_growth}%`,
       description: 'since last month',
       icon: TrendingUp,
       iconBg: 'bg-amber-50',
@@ -79,33 +138,18 @@ export default function MyImpact() {
     },
   ]
 
-  const recentImpact = [
-    {
-      title: 'Children Story Books',
-      location: 'Community Learning Center',
-      status: 'Delivered',
-      date: 'Aug 24, 2026',
-      icon: CheckCircle2,
-      statusClass: 'bg-meadow-500/10 text-meadow-600',
-    },
-    {
-      title: 'Winter Clothes',
-      location: 'Hope Community Center',
-      status: 'In Transit',
-      date: 'Aug 19, 2026',
-      icon: PackageCheck,
-      statusClass: 'bg-sky-50 text-sky-600',
-    },
-    {
-      title: 'School Supplies',
-      location: 'Children Support Program',
-      status: 'Processing',
-      date: 'Aug 12, 2026',
-      icon: TrendingUp,
-      statusClass: 'bg-amber-100 text-amber-600',
-    },
-  ]
-
+  const recentImpact = impactData.recent_donations.map((donation) => ({
+    title: donation.title,
+    location: donation.location || 'Location not provided',
+    status: 'Submitted',
+    date: new Date(donation.created_at).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }),
+    icon: CheckCircle2,
+    statusClass: 'bg-sky-50 text-sky-600',
+  }))
   return (
     <div className="min-h-screen bg-mist">
 
@@ -318,7 +362,11 @@ export default function MyImpact() {
                   <TrendingUp className="h-4 w-4 text-sky-300" />
 
                   <span>
-                    You're 8 points away from becoming a Hope Champion.
+                    <span>
+                      {impactScore >= 90
+                        ? "You've reached Hope Champion status!"
+                        : `You're ${90 - impactScore} points away from becoming a Hope Champion.`}
+                    </span>
                   </span>
 
                 </div>
