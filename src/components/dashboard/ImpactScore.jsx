@@ -4,8 +4,38 @@ import {
   Sparkles,
 } from 'lucide-react'
 
+import { useEffect, useState } from 'react'
+import { apiUrl } from '../../config/api'
+
 export default function ImpactScore() {
-  const score = 82
+  const [score, setScore] = useState(0)
+
+  useEffect(() => {
+    const fetchImpact = async () => {
+      try {
+        const token = localStorage.getItem('token')
+
+        const response = await fetch(apiUrl('/my-impact'), {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch impact score')
+        }
+
+        const data = await response.json()
+
+        setScore(data.impact?.impact_score ?? 0)
+      } catch (error) {
+        console.error('Failed to load impact score:', error)
+      }
+    }
+
+    fetchImpact()
+  }, [])
 
   return (
     <section className="rounded-2xl border border-cloudline bg-white p-6 shadow-card sm:p-7">

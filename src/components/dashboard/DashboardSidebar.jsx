@@ -9,7 +9,7 @@ import {
   Gift,
   X,
 } from 'lucide-react'
-
+import { apiUrl } from '../../config/api'
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
@@ -47,9 +47,28 @@ export default function DashboardSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const handleSignOut = () => {
-    navigate('/')
-    setOpen(false)
+  const handleSignOut = async () => {
+    const token = localStorage.getItem('token')
+
+    try {
+      if (token) {
+        await fetch(apiUrl('/logout'), {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        })
+      }
+    } catch (error) {
+      console.error('Logout request failed:', error)
+    } finally {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+
+      setOpen(false)
+      navigate('/login')
+    }
   }
 
   const handleDonate = () => {
@@ -230,14 +249,13 @@ export default function DashboardSidebar() {
                     transition-all
                     duration-200
 
-                    ${
-                      isActive
-                        ? `
+                    ${isActive
+                      ? `
                           bg-deepsea
                           text-white
                           shadow-soft
                         `
-                        : `
+                      : `
                           text-slate-muted
                           hover:bg-sky-50
                           hover:text-deepsea
@@ -254,10 +272,9 @@ export default function DashboardSidebar() {
                       duration-200
                       group-hover:scale-110
 
-                      ${
-                        isActive
-                          ? 'text-white'
-                          : 'text-slate-muted group-hover:text-deepsea'
+                      ${isActive
+                        ? 'text-white'
+                        : 'text-slate-muted group-hover:text-deepsea'
                       }
                     `}
                   />

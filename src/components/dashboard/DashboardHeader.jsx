@@ -8,7 +8,7 @@ import {
   Settings,
   LogOut,
 } from 'lucide-react'
-
+import { apiUrl } from '../../config/api'
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -54,9 +54,28 @@ export default function DashboardHeader() {
     setNotificationOpen(false)
   }
 
-  const handleSignOut = () => {
-    navigate('/')
-    setProfileOpen(false)
+  const handleSignOut = async () => {
+    const token = localStorage.getItem('token')
+
+    try {
+      if (token) {
+        await fetch(apiUrl('/logout'), {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        })
+      }
+    } catch (error) {
+      console.error('Logout request failed:', error)
+    } finally {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+
+      setProfileOpen(false)
+      navigate('/login')
+    }
   }
 
   return (

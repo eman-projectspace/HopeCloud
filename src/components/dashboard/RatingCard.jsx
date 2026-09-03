@@ -1,5 +1,4 @@
 import {
-  Star,
   Award,
   MessageCircle,
 } from 'lucide-react'
@@ -14,8 +13,8 @@ export default function RatingCard() {
           <Award className="h-5 w-5" />
         </div>
 
-        <span className="rounded-full bg-meadow-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-meadow-600">
-          Excellent
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-muted">
+          Not Rated
         </span>
 
       </div>
@@ -24,41 +23,24 @@ export default function RatingCard() {
         Your Contributor Rating
       </p>
 
-      <div className="mt-2 flex items-center gap-3">
+      <div className="mt-2">
 
-        <span className="font-display text-4xl font-extrabold text-ink">
-          4.8
+        <span className="font-display text-3xl font-extrabold text-ink">
+          Not rated yet
         </span>
 
-        <div>
-
-          <div className="flex gap-0.5 text-amber-500">
-
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Star
-                key={star}
-                className="h-4 w-4 fill-current"
-              />
-            ))}
-
-          </div>
-
-          <p className="mt-1 text-[10px] text-slate-muted">
-            Based on your contributions
-          </p>
-
-        </div>
+        <p className="mt-1 text-xs text-slate-muted">
+          Ratings will appear when contributor feedback is available.
+        </p>
 
       </div>
-
 
       <div className="mt-5 rounded-xl bg-mist p-4">
 
         <MessageCircle className="h-4 w-4 text-sky-500" />
 
         <p className="mt-2 text-xs leading-relaxed text-slate-muted">
-          "Your consistent contributions are helping create
-          meaningful change."
+          Contributor feedback is not available yet.
         </p>
 
       </div>
