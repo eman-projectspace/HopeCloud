@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Cloud, Menu, X, LogIn, UserPlus, LogOut } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { apiUrl } from '../config/api'
 
 const navLinks = [
   {
@@ -44,7 +45,7 @@ export default function Navbar() {
 
     try {
       if (token) {
-        await fetch('http://127.0.0.1:8000/api/logout', {
+        await fetch(apiUrl('/logout'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

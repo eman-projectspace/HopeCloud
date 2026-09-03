@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 
 import { Link } from 'react-router-dom'
+import { apiUrl } from '../../config/api'
 
 const categories = [
   {
@@ -138,7 +139,7 @@ export default function Donate() {
       }
 
       const response = await fetch(
-        'http://127.0.0.1:8000/api/donations',
+        apiUrl('/donations'),
         {
           method: 'POST',
           headers: {

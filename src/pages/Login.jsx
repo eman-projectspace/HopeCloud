@@ -11,6 +11,7 @@ import {
   Mail,
   ShieldCheck,
 } from 'lucide-react'
+import { apiUrl } from '../config/api'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -77,7 +78,7 @@ export default function Login() {
     setIsLoading(true)
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/login', {
+      const response = await fetch(apiUrl('/login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

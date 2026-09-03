@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 
 import { Link } from 'react-router-dom'
+import { apiUrl } from '../../config/api'
 
 export default function MyImpact() {
   const [impactData, setImpactData] = useState(null)
@@ -27,7 +28,7 @@ export default function MyImpact() {
         const token = localStorage.getItem('token')
 
         const response = await fetch(
-          'http://127.0.0.1:8000/api/my-impact',
+          apiUrl('/my-impact'),
           {
             headers: {
               Accept: 'application/json',

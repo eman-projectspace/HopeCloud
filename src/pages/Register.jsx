@@ -12,6 +12,7 @@ import {
   Mail,
   User,
 } from 'lucide-react'
+import { apiUrl } from '../config/api'
 
 export default function Register() {
   const navigate = useNavigate()
@@ -197,7 +198,7 @@ export default function Register() {
     setIsLoading(true)
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/register', {
+      const response = await fetch(apiUrl('/register'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
