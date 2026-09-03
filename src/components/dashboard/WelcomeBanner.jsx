@@ -4,11 +4,21 @@ import {
   ArrowRight,
 } from 'lucide-react'
 
+import { useState } from 'react'
+
 import { useNavigate } from 'react-router-dom'
 
 export default function WelcomeBanner() {
 
   const navigate = useNavigate()
+
+  const [user] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user')) || null
+    } catch {
+      return null
+    }
+  })
 
   const handleDonate = () => {
     navigate('/donate')
@@ -53,7 +63,7 @@ export default function WelcomeBanner() {
 
 
           <h1 className="font-display text-2xl font-extrabold sm:text-3xl">
-            Welcome back, Faryal! 👋
+            Welcome back, {user?.name || 'there'}! 👋
           </h1>
 
 
