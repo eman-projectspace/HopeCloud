@@ -17,78 +17,15 @@ import {
 } from 'lucide-react'
 
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
-
-const donations = [
-  {
-    id: 1,
-    item: 'Children Story Books',
-    category: 'Books',
-    condition: 'Like New',
-    quantity: 8,
-    date: 'Aug 24, 2026',
-    status: 'Delivered',
-    statusType: 'delivered',
-    location: 'Lahore',
-    recipient: 'A local child education center',
-    description:
-      'Colorful story books and early learning books for children.',
-    image:
-      'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 2,
-    item: 'Winter Clothes',
-    category: 'Clothes',
-    condition: 'Good',
-    quantity: 6,
-    date: 'Aug 19, 2026',
-    status: 'In Transit',
-    statusType: 'transit',
-    location: 'Lahore',
-    recipient: 'Families in need',
-    description:
-      'Clean and warm winter clothes suitable for children.',
-    image:
-      'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 3,
-    item: 'School Supplies',
-    category: "Children's Items",
-    condition: 'New',
-    quantity: 12,
-    date: 'Aug 12, 2026',
-    status: 'Processing',
-    statusType: 'processing',
-    location: 'Lahore',
-    recipient: 'Waiting for recipient matching',
-    description:
-      'Notebooks, pencils, colors and other basic school supplies.',
-    image:
-      'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 4,
-    item: 'Children Clothing Bundle',
-    category: 'Clothes',
-    condition: 'Good',
-    quantity: 10,
-    date: 'Jul 28, 2026',
-    status: 'Delivered',
-    statusType: 'delivered',
-    location: 'Lahore',
-    recipient: 'Child Protection Center',
-    description:
-      'Clean everyday clothing for children aged 6–12.',
-    image:
-      'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?auto=format&fit=crop&w=800&q=80',
-  },
-]
-
-const categories = ['All', 'Books', 'Clothes', "Children's Items"]
+import { useEffect, useMemo, useState } from 'react'
+import { apiUrl, storageUrl } from '../../config/api'
 
 const statusConfig = {
+  submitted: {
+    label: 'Submitted',
+    icon: Upload,
+    classes: 'bg-sky-50 text-sky-600',
+  },
   delivered: {
     label: 'Delivered',
     icon: CheckCircle2,
@@ -113,8 +50,96 @@ const categoryIcons = {
 }
 
 export default function MyDonations() {
+  const [donationRecords, setDonationRecords] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [selectedDonation, setSelectedDonation] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    const fetchDonations = async () => {
+      const token = localStorage.getItem('token')
+
+      if (!token) {
+        setError('Please log in to view your donations.')
+        setLoading(false)
+        return
+      }
+
+      try {
+        const response = await fetch(apiUrl('/donations'), {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (!response.ok) {
+          throw new Error(
+            response.status === 401
+              ? 'Your session has expired. Please log in again.'
+              : 'Unable to load your donations.'
+          )
+        }
+
+        const data = await response.json()
+        setDonationRecords(
+          Array.isArray(data.donations) ? data.donations : []
+        )
+      } catch (err) {
+        console.error(err)
+        setError(err.message || 'Unable to load your donations.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDonations()
+  }, [])
+
+  const donations = useMemo(
+    () =>
+      donationRecords.map((donation) => {
+        const createdAt = new Date(donation.created_at)
+        const date = Number.isNaN(createdAt.getTime())
+          ? 'Date unavailable'
+          : createdAt.toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            })
+
+        return {
+          id: donation.id,
+          item: donation.title || 'Untitled donation',
+          category: donation.category || 'Other',
+          condition: donation.condition || 'Not specified',
+          quantity: Number(donation.quantity) || 0,
+          date,
+          status: statusConfig.submitted.label,
+          statusType: 'submitted',
+          location: donation.location || 'Location not provided',
+          recipient: 'Waiting for recipient matching',
+          description:
+            donation.description ||
+            donation.notes ||
+            'No description provided.',
+          image: storageUrl(donation.image),
+        }
+      }),
+    [donationRecords]
+  )
+
+  const categories = useMemo(
+    () => ['All', ...new Set(donations.map((donation) => donation.category))],
+    [donations]
+  )
+
+  useEffect(() => {
+    if (!categories.includes(selectedCategory)) {
+      setSelectedCategory('All')
+    }
+  }, [categories, selectedCategory])
 
   const filteredDonations =
     selectedCategory === 'All'
@@ -135,6 +160,24 @@ export default function MyDonations() {
     (total, donation) => total + donation.quantity,
     0
   )
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-mist">
+        <p className="text-sm font-semibold text-slate-muted">
+          Loading your donations...
+        </p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-mist">
+        <p className="text-sm font-semibold text-red-500">{error}</p>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-mist">
@@ -338,7 +381,28 @@ export default function MyDonations() {
           </div>
 
 
-          {filteredDonations.length === 0 && (
+          {donations.length === 0 ? (
+
+            <div className="mt-5 rounded-3xl border border-dashed border-cloudline bg-white p-12 text-center">
+
+              <Package className="mx-auto h-10 w-10 text-slate-muted" />
+
+              <h3 className="mt-4 font-display text-lg font-bold text-ink">
+                No donations yet
+              </h3>
+
+              <p className="mt-2 text-sm text-slate-muted">
+                Share an item to start your giving journey.
+              </p>
+
+              <Link to="/donate" className="btn-primary mt-5">
+                <Gift className="h-4 w-4" />
+                Donate an Item
+              </Link>
+
+            </div>
+
+          ) : filteredDonations.length === 0 ? (
 
             <div className="mt-5 rounded-3xl border border-dashed border-cloudline bg-white p-12 text-center">
 
@@ -354,7 +418,7 @@ export default function MyDonations() {
 
             </div>
 
-          )}
+          ) : null}
 
         </section>
 
@@ -429,12 +493,38 @@ function SummaryCard({
 
 /* Donation Card */
 
+function DonationImage({
+  src,
+  alt,
+  className,
+}) {
+  const [failed, setFailed] = useState(false)
+
+  if (!src || failed) {
+    return (
+      <div className={`${className} flex items-center justify-center bg-mist text-slate-muted`}>
+        <ImageIcon className="h-10 w-10" />
+      </div>
+    )
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      onError={() => setFailed(true)}
+    />
+  )
+}
+
 function DonationCard({
   donation,
   onView,
 }) {
-  const StatusIcon = statusConfig[donation.statusType].icon
-  const CategoryIcon = categoryIcons[donation.category]
+  const status = statusConfig[donation.statusType] ?? statusConfig.submitted
+  const StatusIcon = status.icon
+  const CategoryIcon = categoryIcons[donation.category] ?? Package
 
   return (
     <article
@@ -459,7 +549,7 @@ function DonationCard({
 
         <div className="relative h-56 overflow-hidden sm:h-auto sm:w-52 sm:shrink-0">
 
-          <img
+          <DonationImage
             src={donation.image}
             alt={donation.item}
             className="
@@ -485,7 +575,7 @@ function DonationCard({
                 text-[10px]
                 font-bold
                 backdrop-blur-md
-                ${statusConfig[donation.statusType].classes}
+                ${status.classes}
               `}
             >
               <StatusIcon className="h-3.5 w-3.5" />
@@ -623,6 +713,8 @@ function DonationDetails({
 }) {
   const isDelivered = donation.statusType === 'delivered'
   const isTransit = donation.statusType === 'transit'
+  const status = statusConfig[donation.statusType] ?? statusConfig.submitted
+  const StatusIcon = status.icon
 
   return (
     <div
@@ -657,7 +749,7 @@ function DonationDetails({
 
         <div className="relative">
 
-          <img
+          <DonationImage
             src={donation.image}
             alt={donation.item}
             className="h-56 w-full object-cover sm:h-64"
@@ -716,13 +808,10 @@ function DonationDetails({
                 py-1.5
                 text-[10px]
                 font-bold
-                ${statusConfig[donation.statusType].classes}
+                ${status.classes}
               `}
             >
-              {(() => {
-                const Icon = statusConfig[donation.statusType].icon
-                return <Icon className="h-3.5 w-3.5" />
-              })()}
+              <StatusIcon className="h-3.5 w-3.5" />
 
               {donation.status}
             </span>
