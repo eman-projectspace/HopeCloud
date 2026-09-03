@@ -12,21 +12,21 @@ export default function About() {
         sm:py-24
       "
     >
-     {/* Background Image */}
-<div
-  className="
+      {/* Background Image aliBaba$$1234*/}
+      <div
+        className="
     absolute
     inset-0
     bg-cover
     bg-center
   "
-  style={{
-    backgroundImage: `url(${aboutBg})`,
-  }}
-/>
+        style={{
+          backgroundImage: `url(${aboutBg})`,
+        }}
+      />
 
-     {/* Light Overlay */}
-<div className="absolute inset-0 bg-deepsea/45" />
+      {/* Light Overlay */}
+      <div className="absolute inset-0 bg-deepsea/45" />
 
       {/* Content */}
       <div className="container-max relative z-10">
@@ -69,9 +69,9 @@ export default function About() {
               sm:text-4xl
             "
           >
-              One Donation Can Make a 
+            One Donation Can Make a
             <span className="block text-sky-300">
-             Meaningful Difference.
+              Meaningful Difference.
             </span>
           </h2>
 
