@@ -120,9 +120,8 @@ export default function Login() {
 
       setIsSuccess(true)
 
-      // Go to home page after successful login
       setTimeout(() => {
-        navigate('/')
+        navigate('/user-dashboard')
       }, 1800)
 
     } catch (error) {
