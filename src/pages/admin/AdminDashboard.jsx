@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Navigate } from 'react-router-dom'
 import {
   HeartHandshake,
   Clock3,
@@ -12,6 +13,9 @@ import AdminStatCard from '../../components/admin/AdminStatCard.jsx'
 import { apiUrl } from '../../config/api.js'
 
 function AdminDashboard() {
+  const [authChecked, setAuthChecked] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+
   const [stats, setStats] = useState({
     total_donations: 0,
     pending_donations: 0,
@@ -25,6 +29,37 @@ function AdminDashboard() {
   const [error, setError] = useState('')
   const [updatingId, setUpdatingId] = useState(null)
 
+  // --------------------------------------------------
+  // Check whether the logged-in account is an admin
+  // --------------------------------------------------
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem('token')
+      const storedUser = localStorage.getItem('user')
+
+      if (!token || !storedUser) {
+        setIsAdmin(false)
+        setAuthChecked(true)
+        return
+      }
+
+      const user = JSON.parse(storedUser)
+
+      if (user?.role === 'admin') {
+        setIsAdmin(true)
+      } else {
+        setIsAdmin(false)
+      }
+    } catch {
+      setIsAdmin(false)
+    } finally {
+      setAuthChecked(true)
+    }
+  }, [])
+
+  // --------------------------------------------------
+  // Load dashboard data
+  // --------------------------------------------------
   const loadDashboard = async () => {
     try {
       setLoading(true)
@@ -46,13 +81,28 @@ function AdminDashboard() {
 
       const data = await response.json()
 
+      // If backend says this is not an admin,
+      // immediately remove access to the admin panel.
+      if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('hopecloud_admin_logged_in')
+        setIsAdmin(false)
+        return
+      }
+
       if (!response.ok) {
         throw new Error(
           data.message || 'Unable to load admin dashboard.'
         )
       }
 
-      setStats(data.stats || {})
+      setStats({
+        total_donations: data.stats?.total_donations ?? 0,
+        pending_donations: data.stats?.pending_donations ?? 0,
+        approved_donations: data.stats?.approved_donations ?? 0,
+        total_users: data.stats?.total_users ?? 0,
+        approval_rate: data.stats?.approval_rate ?? 0,
+      })
+
       setRecentDonations(data.recent_donations || [])
     } catch (err) {
       setError(err.message || 'Unable to load admin dashboard.')
@@ -62,9 +112,14 @@ function AdminDashboard() {
   }
 
   useEffect(() => {
-    loadDashboard()
-  }, [])
+    if (authChecked && isAdmin) {
+      loadDashboard()
+    }
+  }, [authChecked, isAdmin])
 
+  // --------------------------------------------------
+  // Update donation status
+  // --------------------------------------------------
   const updateDonationStatus = async (donationId, status) => {
     try {
       setUpdatingId(donationId)
@@ -78,7 +133,6 @@ function AdminDashboard() {
 
       const response = await fetch(
         apiUrl(`/admin/donations/${donationId}/status`),
-
         {
           method: 'PUT',
           headers: {
@@ -94,12 +148,20 @@ function AdminDashboard() {
 
       const data = await response.json()
 
+      if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('hopecloud_admin_logged_in')
+        setIsAdmin(false)
+        return
+      }
+
       if (!response.ok) {
         throw new Error(
           data.message || 'Unable to update donation status.'
         )
       }
 
+      // Refresh dashboard so stats and recent donation status
+      // always reflect the real backend state.
       await loadDashboard()
     } catch (err) {
       setError(
@@ -110,6 +172,9 @@ function AdminDashboard() {
     }
   }
 
+  // --------------------------------------------------
+  // Status helpers
+  // --------------------------------------------------
   const formatStatus = (status) => {
     if (status === 'approved') return 'Approved'
     if (status === 'submitted') return 'Pending'
@@ -132,6 +197,35 @@ function AdminDashboard() {
     return 'bg-amber-50 text-amber-600'
   }
 
+  // --------------------------------------------------
+  // Wait until authentication has been checked
+  // --------------------------------------------------
+  if (!authChecked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-mist">
+        <div className="rounded-2xl border border-cloudline bg-white px-6 py-5 text-sm font-semibold text-slate-muted shadow-soft">
+          Checking account access...
+        </div>
+      </div>
+    )
+  }
+
+  // --------------------------------------------------
+  // Normal users must NEVER see the admin panel
+  // --------------------------------------------------
+  if (!isAdmin) {
+    const token = localStorage.getItem('token')
+
+    if (token) {
+      return <Navigate to="/user-dashboard" replace />
+    }
+
+    return <Navigate to="/login" replace />
+  }
+
+  // --------------------------------------------------
+  // Admin dashboard
+  // --------------------------------------------------
   return (
     <div className="min-h-screen bg-mist">
 
@@ -142,9 +236,7 @@ function AdminDashboard() {
         <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8">
 
           {/* Header */}
-
           <div className="mb-8">
-
             <p className="text-sm font-semibold text-sky-600">
               Administration
             </p>
@@ -156,11 +248,9 @@ function AdminDashboard() {
             <p className="mt-2 text-sm text-slate-muted">
               Monitor donations and HopeCloud activity.
             </p>
-
           </div>
 
           {/* Loading */}
-
           {loading && (
             <div className="mb-6 rounded-2xl border border-cloudline bg-white px-5 py-4 text-sm text-slate-muted shadow-soft">
               Loading dashboard data...
@@ -168,7 +258,6 @@ function AdminDashboard() {
           )}
 
           {/* Error */}
-
           {error && (
             <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-600">
               {error}
@@ -176,7 +265,6 @@ function AdminDashboard() {
           )}
 
           {/* Stats */}
-
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
 
             <AdminStatCard
@@ -216,13 +304,11 @@ function AdminDashboard() {
           </div>
 
           {/* Recent Donations */}
-
           <div className="mt-8 rounded-3xl border border-cloudline bg-white shadow-soft">
 
             <div className="flex flex-col gap-2 border-b border-cloudline px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
 
               <div>
-
                 <h2 className="font-display text-lg font-extrabold text-ink">
                   Recent Donations
                 </h2>
@@ -230,7 +316,6 @@ function AdminDashboard() {
                 <p className="mt-1 text-xs text-slate-muted">
                   Latest donation submissions
                 </p>
-
               </div>
 
             </div>
@@ -259,7 +344,6 @@ function AdminDashboard() {
                       </div>
 
                       <div>
-
                         <h3 className="text-sm font-bold text-ink">
                           {donation.item}
                         </h3>
@@ -267,7 +351,6 @@ function AdminDashboard() {
                         <p className="mt-1 text-xs text-slate-muted">
                           Donated by {donation.donor}
                         </p>
-
                       </div>
 
                     </div>
@@ -295,7 +378,6 @@ function AdminDashboard() {
                   </div>
 
                   {/* Review Actions */}
-
                   {donation.status === 'submitted' && (
                     <div className="flex flex-wrap gap-3 pl-0 md:pl-15">
 
@@ -347,7 +429,6 @@ function AdminDashboard() {
           </div>
 
           {/* Bottom Info */}
-
           <div className="mt-8 grid gap-5 md:grid-cols-2">
 
             <div className="rounded-3xl border border-cloudline bg-white p-6 shadow-soft">

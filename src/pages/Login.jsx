@@ -121,7 +121,13 @@ export default function Login() {
       setIsSuccess(true)
 
       setTimeout(() => {
-        navigate('/user-dashboard')
+        if (data.user?.role === 'admin') {
+          localStorage.setItem('hopecloud_admin_logged_in', 'true')
+          navigate('/admindashboard')
+        } else {
+          localStorage.removeItem('hopecloud_admin_logged_in')
+          navigate('/user-dashboard')
+        }
       }, 1800)
 
     } catch (error) {
