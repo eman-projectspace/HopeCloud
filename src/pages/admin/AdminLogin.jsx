@@ -1,34 +1,59 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { ShieldCheck, Mail, Lock, ArrowRight } from 'lucide-react'
 
-function AdminLogin() {
-  const navigate = useNavigate()
+import { apiUrl } from '../../config/api.js'
 
+function AdminLogin() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-const handleLogin = (e) => {
-  e.preventDefault()
+  const handleLogin = async (e) => {
+    e.preventDefault()
 
-  setError('')
+    setError('')
+    setLoading(true)
 
-  const adminEmail = email.trim().toLowerCase()
+    try {
+      const response = await fetch(apiUrl('/login'), {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password,
+        }),
+      })
 
-  if (
-    adminEmail === 'admin@hopecloud.com' &&
-    password === 'admin123'
-  ) {
-    localStorage.setItem('hopecloud_admin_logged_in', 'true')
+      const data = await response.json()
 
-    window.location.href = '/admindashboard'
+      if (!response.ok) {
+        throw new Error(
+          data.message || 'Invalid admin email or password.'
+        )
+      }
 
-    return
+      if (data.user?.role !== 'admin') {
+        throw new Error(
+          'This account does not have administrator access.'
+        )
+      }
+
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+      localStorage.setItem('hopecloud_admin_logged_in', 'true')
+
+      window.location.href = '/admindashboard'
+    } catch (err) {
+      setError(err.message || 'Unable to login.')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  setError('Invalid admin email or password.')
-}
   return (
     <div className="min-h-screen bg-mist px-4 py-10">
 
@@ -132,10 +157,12 @@ const handleLogin = (e) => {
 
               <button
                 type="submit"
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-deepsea px-5 py-3.5 text-sm font-bold text-white transition hover:bg-deepsea/90"
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-deepsea px-5 py-3.5 text-sm font-bold text-white transition hover:bg-deepsea/90 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Login to Admin Panel
-                <ArrowRight size={17} />
+                {loading ? 'Signing in...' : 'Login to Admin Panel'}
+
+                {!loading && <ArrowRight size={17} />}
               </button>
 
             </form>
