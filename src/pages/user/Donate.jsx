@@ -15,6 +15,9 @@ import {
   MapPin,
   CalendarDays,
   Sparkles,
+  Bot,
+  ShieldCheck,
+  Loader2,
 } from 'lucide-react'
 
 import { Link } from 'react-router-dom'
@@ -46,8 +49,8 @@ const categories = [
     icon: Package,
     description: 'Other useful items',
   },
-
 ]
+
 const dropOffLocations = [
   {
     name: 'Gulberg Donation Center',
@@ -70,6 +73,7 @@ const dropOffLocations = [
     address: 'Gulshan-e-Iqbal, Karachi',
   },
 ]
+
 export default function Donate() {
   const [category, setCategory] = useState('Books')
   const [itemName, setItemName] = useState('')
@@ -85,20 +89,93 @@ export default function Donate() {
   const [imagePreview, setImagePreview] = useState(null)
   const [submitted, setSubmitted] = useState(false)
 
+  // AI verification state
+  const [aiVerifying, setAiVerifying] = useState(false)
+  const [aiVerified, setAiVerified] = useState(false)
+  const [aiResult, setAiResult] = useState(null)
+
   const handleImageChange = (event) => {
     const file = event.target.files?.[0]
 
     if (!file) return
 
+    // Basic file size protection
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Please choose an image smaller than 5MB.')
+      return
+    }
+
     setImage(file)
 
     const previewUrl = URL.createObjectURL(file)
     setImagePreview(previewUrl)
+
+    // Reset AI verification whenever a new image is selected
+    setAiVerified(false)
+    setAiResult(null)
   }
 
   const removeImage = () => {
     setImage(null)
     setImagePreview(null)
+    setAiVerified(false)
+    setAiResult(null)
+  }
+
+  // Frontend AI verification prototype
+  const handleAIVerification = async () => {
+    if (!image) {
+      alert('Please upload a donation photo first.')
+      return
+    }
+
+    setAiVerifying(true)
+    setAiVerified(false)
+    setAiResult(null)
+
+    // Simulate AI image-analysis processing
+    await new Promise((resolve) => setTimeout(resolve, 1400))
+
+    const categoryConfidence = {
+      Books: 94,
+      Clothes: 92,
+      "Children's Items": 91,
+      'Food & Essentials': 89,
+      Other: 86,
+    }
+
+    const conditionConfidence = {
+      New: 96,
+      'Like New': 94,
+      Good: 91,
+      Used: 86,
+    }
+
+    const confidence = Math.min(
+      categoryConfidence[category] || 88,
+      conditionConfidence[condition] || 88
+    )
+
+    let suitability = 'Suitable'
+    let recommendation =
+      'The item appears suitable for donation based on the information provided.'
+
+    if (condition === 'Used') {
+      suitability = 'Review Recommended'
+      recommendation =
+        'The item may be suitable for donation, but our team should review its condition before approval.'
+    }
+
+    setAiResult({
+      category,
+      condition,
+      confidence,
+      suitability,
+      recommendation,
+    })
+
+    setAiVerified(true)
+    setAiVerifying(false)
   }
 
   const handleSubmit = async (event) => {
@@ -148,7 +225,6 @@ export default function Donate() {
           },
           body: formData,
         }
-
       )
 
       const data = await response.json()
@@ -162,24 +238,20 @@ export default function Donate() {
       console.log('Donation created:', data)
 
       setSubmitted(true)
-
     } catch (error) {
       console.error('Donation error:', error)
       alert('Something went wrong. Make sure Laravel is running.')
     }
   }
+
   if (submitted) {
     return (
       <div className="min-h-screen bg-mist px-5 py-10 sm:px-8 lg:px-10">
-
         <div className="mx-auto flex min-h-[80vh] max-w-2xl items-center justify-center">
-
           <div className="w-full rounded-3xl border border-cloudline bg-white p-8 text-center shadow-soft sm:p-12">
 
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-meadow-500/10 text-meadow-600">
-
               <CheckCircle2 className="h-10 w-10" />
-
             </div>
 
             <p className="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-meadow-600">
@@ -232,6 +304,8 @@ export default function Donate() {
                   setNotes('')
                   setImage(null)
                   setImagePreview(null)
+                  setAiVerified(false)
+                  setAiResult(null)
                 }}
                 className="
                   inline-flex
@@ -257,9 +331,7 @@ export default function Donate() {
             </div>
 
           </div>
-
         </div>
-
       </div>
     )
   }
@@ -270,7 +342,6 @@ export default function Donate() {
       {/* Header */}
 
       <header className="border-b border-cloudline bg-white">
-
         <div className="mx-auto flex max-w-7xl items-center px-5 py-5 sm:px-8 lg:px-10">
 
           <Link
@@ -287,7 +358,6 @@ export default function Donate() {
               hover:text-deepsea
             "
           >
-
             <span
               className="
                 flex
@@ -310,20 +380,16 @@ export default function Donate() {
             </span>
 
             Back to Dashboard
-
           </Link>
 
         </div>
-
       </header>
-
 
       {/* Main */}
 
       <main className="px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
 
         <div className="mx-auto max-w-7xl">
-
 
           {/* Page Heading */}
 
@@ -348,11 +414,9 @@ export default function Donate() {
 
           </div>
 
-
           {/* Main Grid */}
 
           <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-
 
             {/* Form */}
 
@@ -385,7 +449,6 @@ export default function Donate() {
 
                 </div>
 
-
                 {/* Categories */}
 
                 <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -399,7 +462,11 @@ export default function Donate() {
                       <button
                         key={item.name}
                         type="button"
-                        onClick={() => setCategory(item.name)}
+                        onClick={() => {
+                          setCategory(item.name)
+                          setAiVerified(false)
+                          setAiResult(null)
+                        }}
                         className={`
                           group
                           rounded-2xl
@@ -454,16 +521,11 @@ export default function Donate() {
 
                 </div>
 
-
-
-
               </div>
-
 
               {/* Divider */}
 
               <div className="my-8 border-t border-cloudline" />
-
 
               {/* Step 2 */}
 
@@ -489,9 +551,7 @@ export default function Donate() {
 
                 </div>
 
-
                 <div className="mt-5 grid gap-5 sm:grid-cols-2">
-
 
                   {/* Item Name */}
 
@@ -528,7 +588,6 @@ export default function Donate() {
 
                   </div>
 
-
                   {/* Quantity */}
 
                   <div>
@@ -561,7 +620,6 @@ export default function Donate() {
 
                   </div>
 
-
                   {/* Condition */}
 
                   <div>
@@ -572,7 +630,11 @@ export default function Donate() {
 
                     <select
                       value={condition}
-                      onChange={(e) => setCondition(e.target.value)}
+                      onChange={(e) => {
+                        setCondition(e.target.value)
+                        setAiVerified(false)
+                        setAiResult(null)
+                      }}
                       className="
                         mt-2
                         w-full
@@ -597,7 +659,6 @@ export default function Donate() {
                     </select>
 
                   </div>
-
 
                   {/* Description */}
 
@@ -639,11 +700,9 @@ export default function Donate() {
 
               </div>
 
-
               {/* Divider */}
 
               <div className="my-8 border-t border-cloudline" />
-
 
               {/* Step 3 - Image */}
 
@@ -668,7 +727,6 @@ export default function Donate() {
                   </div>
 
                 </div>
-
 
                 <div className="mt-5">
 
@@ -697,9 +755,7 @@ export default function Donate() {
                     >
 
                       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-sky-600 shadow-sm">
-
                         <ImagePlus className="h-7 w-7" />
-
                       </div>
 
                       <p className="mt-4 text-sm font-bold text-ink">
@@ -772,7 +828,7 @@ export default function Donate() {
 
                         </div>
 
-                        <span className="text-[10px] text-slate-muted">
+                        <span className="max-w-[180px] truncate text-[10px] text-slate-muted">
                           {image?.name}
                         </span>
 
@@ -784,13 +840,178 @@ export default function Donate() {
 
                 </div>
 
-              </div>
+                {/* AI Verification */}
 
+                {image && (
+                  <div className="mt-5 overflow-hidden rounded-2xl border border-sky-100 bg-sky-50/60">
+
+                    <div className="flex items-center justify-between border-b border-sky-100 bg-white px-4 py-3">
+
+                      <div className="flex items-center gap-3">
+
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-deepsea text-white">
+                          <Bot className="h-5 w-5" />
+                        </div>
+
+                        <div>
+                          <p className="text-sm font-bold text-ink">
+                            AI Donation Verification
+                          </p>
+
+                          <p className="text-[10px] text-slate-muted">
+                            AI-assisted item analysis preview
+                          </p>
+                        </div>
+
+                      </div>
+
+                      {aiVerified && (
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-meadow-600">
+                          <ShieldCheck className="h-4 w-4" />
+                          Verified
+                        </div>
+                      )}
+
+                    </div>
+
+                    <div className="p-4">
+
+                      {!aiVerified ? (
+
+                        <div>
+
+                          <p className="text-xs leading-relaxed text-slate-muted">
+                            Analyze your uploaded photo and donation details
+                            to receive an AI-assisted category, condition and
+                            suitability assessment.
+                          </p>
+
+                          <button
+                            type="button"
+                            onClick={handleAIVerification}
+                            disabled={aiVerifying}
+                            className="
+                              mt-4
+                              inline-flex
+                              w-full
+                              items-center
+                              justify-center
+                              gap-2
+                              rounded-xl
+                              bg-deepsea
+                              px-4
+                              py-3
+                              text-xs
+                              font-bold
+                              text-white
+                              transition-all
+                              hover:bg-sky-600
+                              disabled:cursor-not-allowed
+                              disabled:opacity-70
+                            "
+                          >
+
+                            {aiVerifying ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Analyzing Donation...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="h-4 w-4" />
+                                Verify Donation with AI
+                              </>
+                            )}
+
+                          </button>
+
+                        </div>
+
+                      ) : (
+
+                        <div>
+
+                          <div className="grid gap-3 sm:grid-cols-3">
+
+                            <div className="rounded-xl border border-cloudline bg-white p-3">
+
+                              <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-muted">
+                                Category
+                              </p>
+
+                              <p className="mt-1 text-sm font-bold text-ink">
+                                {aiResult.category}
+                              </p>
+
+                            </div>
+
+                            <div className="rounded-xl border border-cloudline bg-white p-3">
+
+                              <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-muted">
+                                Condition
+                              </p>
+
+                              <p className="mt-1 text-sm font-bold text-ink">
+                                {aiResult.condition}
+                              </p>
+
+                            </div>
+
+                            <div className="rounded-xl border border-cloudline bg-white p-3">
+
+                              <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-muted">
+                                Confidence
+                              </p>
+
+                              <p className="mt-1 text-sm font-bold text-meadow-600">
+                                {aiResult.confidence}%
+                              </p>
+
+                            </div>
+
+                          </div>
+
+                          <div className="mt-3 flex items-start gap-3 rounded-xl border border-meadow-100 bg-white p-3">
+
+                            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-meadow-500/10 text-meadow-600">
+
+                              <ShieldCheck className="h-4 w-4" />
+
+                            </div>
+
+                            <div>
+
+                              <p className="text-xs font-bold text-ink">
+                                {aiResult.suitability}
+                              </p>
+
+                              <p className="mt-1 text-[10px] leading-relaxed text-slate-muted">
+                                {aiResult.recommendation}
+                              </p>
+
+                            </div>
+
+                          </div>
+
+                          <p className="mt-3 text-center text-[9px] text-slate-muted">
+                            AI-assisted verification preview · Final approval is
+                            completed by the HopeCloud team.
+                          </p>
+
+                        </div>
+
+                      )}
+
+                    </div>
+
+                  </div>
+                )}
+
+              </div>
 
               {/* Divider */}
 
               <div className="my-8 border-t border-cloudline" />
-
 
               {/* Step 4 */}
 
@@ -816,7 +1037,6 @@ export default function Donate() {
 
                 </div>
 
-
                 {/* Delivery method */}
 
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -830,26 +1050,26 @@ export default function Donate() {
                       setDropOffLocation('')
                     }}
                     className={`
-        rounded-2xl
-        border
-        p-4
-        text-left
-        transition-all
-        ${deliveryMethod === 'Pickup'
+                      rounded-2xl
+                      border
+                      p-4
+                      text-left
+                      transition-all
+                      ${deliveryMethod === 'Pickup'
                         ? 'border-deepsea bg-sky-50 shadow-sm'
                         : 'border-cloudline bg-white hover:border-sky-200 hover:bg-sky-50/50'
                       }
-      `}
+                    `}
                   >
 
                     <MapPin
                       className={`
-          h-5 w-5
-          ${deliveryMethod === 'Pickup'
+                        h-5 w-5
+                        ${deliveryMethod === 'Pickup'
                           ? 'text-deepsea'
                           : 'text-slate-muted'
                         }
-        `}
+                      `}
                     />
 
                     <p className="mt-3 text-sm font-bold text-ink">
@@ -862,7 +1082,6 @@ export default function Donate() {
 
                   </button>
 
-
                   {/* Drop Off */}
 
                   <button
@@ -872,26 +1091,26 @@ export default function Donate() {
                       setPickupLocation('')
                     }}
                     className={`
-        rounded-2xl
-        border
-        p-4
-        text-left
-        transition-all
-        ${deliveryMethod === 'Drop-off'
+                      rounded-2xl
+                      border
+                      p-4
+                      text-left
+                      transition-all
+                      ${deliveryMethod === 'Drop-off'
                         ? 'border-deepsea bg-sky-50 shadow-sm'
                         : 'border-cloudline bg-white hover:border-sky-200 hover:bg-sky-50/50'
                       }
-      `}
+                    `}
                   >
 
                     <Package
                       className={`
-          h-5 w-5
-          ${deliveryMethod === 'Drop-off'
+                        h-5 w-5
+                        ${deliveryMethod === 'Drop-off'
                           ? 'text-deepsea'
                           : 'text-slate-muted'
                         }
-        `}
+                      `}
                     />
 
                     <p className="mt-3 text-sm font-bold text-ink">
@@ -905,7 +1124,6 @@ export default function Donate() {
                   </button>
 
                 </div>
-
 
                 {/* Pickup OR Drop-off */}
 
@@ -928,23 +1146,23 @@ export default function Donate() {
                         onChange={(e) => setPickupLocation(e.target.value)}
                         placeholder="Enter your complete pickup location"
                         className="
-            mt-2
-            w-full
-            rounded-xl
-            border
-            border-cloudline
-            bg-white
-            py-3
-            pl-11
-            pr-4
-            text-sm
-            text-ink
-            outline-none
-            transition-all
-            focus:border-sky-400
-            focus:ring-4
-            focus:ring-sky-100
-          "
+                          mt-2
+                          w-full
+                          rounded-xl
+                          border
+                          border-cloudline
+                          bg-white
+                          py-3
+                          pl-11
+                          pr-4
+                          text-sm
+                          text-ink
+                          outline-none
+                          transition-all
+                          focus:border-sky-400
+                          focus:ring-4
+                          focus:ring-sky-100
+                        "
                       />
 
                     </div>
@@ -979,28 +1197,28 @@ export default function Donate() {
                             type="button"
                             onClick={() => setDropOffLocation(location.name)}
                             className={`
-                rounded-2xl
-                border
-                p-4
-                text-left
-                transition-all
-                ${active
+                              rounded-2xl
+                              border
+                              p-4
+                              text-left
+                              transition-all
+                              ${active
                                 ? 'border-deepsea bg-sky-50 shadow-sm'
                                 : 'border-cloudline bg-white hover:border-sky-200 hover:bg-sky-50/50'
                               }
-              `}
+                            `}
                           >
 
                             <div className="flex items-start gap-3">
 
                               <div
                                 className={`
-                    flex h-9 w-9 shrink-0 items-center justify-center rounded-xl
-                    ${active
+                                  flex h-9 w-9 shrink-0 items-center justify-center rounded-xl
+                                  ${active
                                     ? 'bg-deepsea text-white'
                                     : 'bg-sky-50 text-sky-600'
                                   }
-                  `}
+                                `}
                               >
                                 <MapPin className="h-4 w-4" />
                               </div>
@@ -1033,15 +1251,12 @@ export default function Donate() {
 
                           </button>
                         )
-
                       })}
 
                     </div>
 
                   </div>
-
                 )}
-
 
                 {/* Date + Notes */}
 
@@ -1064,27 +1279,26 @@ export default function Donate() {
                         value={date}
                         onChange={(e) => setDate(e.target.value)}
                         className="
-            mt-2
-            w-full
-            rounded-xl
-            border
-            border-cloudline
-            bg-white
-            py-3
-            pl-11
-            pr-4
-            text-sm
-            outline-none
-            focus:border-sky-400
-            focus:ring-4
-            focus:ring-sky-100
-          "
+                          mt-2
+                          w-full
+                          rounded-xl
+                          border
+                          border-cloudline
+                          bg-white
+                          py-3
+                          pl-11
+                          pr-4
+                          text-sm
+                          outline-none
+                          focus:border-sky-400
+                          focus:ring-4
+                          focus:ring-sky-100
+                        "
                       />
 
                     </div>
 
                   </div>
-
 
                   {/* Notes */}
 
@@ -1100,19 +1314,19 @@ export default function Donate() {
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="Anything we should know?"
                       className="
-          mt-2
-          w-full
-          rounded-xl
-          border
-          border-cloudline
-          px-4
-          py-3
-          text-sm
-          outline-none
-          focus:border-sky-400
-          focus:ring-4
-          focus:ring-sky-100
-        "
+                        mt-2
+                        w-full
+                        rounded-xl
+                        border
+                        border-cloudline
+                        px-4
+                        py-3
+                        text-sm
+                        outline-none
+                        focus:border-sky-400
+                        focus:ring-4
+                        focus:ring-sky-100
+                      "
                     />
 
                   </div>
@@ -1120,6 +1334,7 @@ export default function Donate() {
                 </div>
 
               </div>
+
               {/* Submit */}
 
               <div className="mt-8 border-t border-cloudline pt-6">
@@ -1164,11 +1379,9 @@ export default function Donate() {
 
             </form>
 
-
             {/* Right Summary */}
 
             <aside className="space-y-5">
-
 
               {/* Impact Card */}
 
@@ -1211,6 +1424,67 @@ export default function Donate() {
 
               </div>
 
+              {/* AI Card */}
+
+              <div className="rounded-3xl border border-sky-100 bg-sky-50/60 p-6">
+
+                <div className="flex items-center gap-3">
+
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-deepsea shadow-sm">
+                    <Bot className="h-5 w-5" />
+                  </div>
+
+                  <div>
+
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-sky-600">
+                      Smart Verification
+                    </p>
+
+                    <p className="mt-1 text-xs text-slate-muted">
+                      AI-assisted donation screening
+                    </p>
+
+                  </div>
+
+                </div>
+
+                <div className="mt-5 space-y-3">
+
+                  <div className="flex items-center gap-2 text-xs text-slate-muted">
+
+                    <CheckCircle2 className="h-4 w-4 text-meadow-600" />
+
+                    Image analysis
+
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs text-slate-muted">
+
+                    <CheckCircle2 className="h-4 w-4 text-meadow-600" />
+
+                    Category detection
+
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs text-slate-muted">
+
+                    <CheckCircle2 className="h-4 w-4 text-meadow-600" />
+
+                    Condition assessment
+
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs text-slate-muted">
+
+                    <CheckCircle2 className="h-4 w-4 text-meadow-600" />
+
+                    Donation suitability
+
+                  </div>
+
+                </div>
+
+              </div>
 
               {/* Summary */}
 
@@ -1285,7 +1559,6 @@ export default function Donate() {
                 </div>
 
               </div>
-
 
               {/* Tip */}
 
