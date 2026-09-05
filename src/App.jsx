@@ -38,8 +38,8 @@ function Home() {
         <About />
         <Causes />
         <AIMatching />
-        <Stories />
         <VolunteerSection />
+        <Stories />
       </main>
       <Footer />
     </>
