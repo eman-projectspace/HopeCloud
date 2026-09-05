@@ -2,7 +2,6 @@ import { ToastProvider } from './components/ui/Toast.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import Navbar from './components/Navbar.jsx'
 import Hero from './components/Hero.jsx'
-import ImpactStats from './components/ImpactStats.jsx'
 import HowItWorks from './components/HowItWorks.jsx'
 import Causes from './components/Causes.jsx'
 import AIMatching from './components/AIMatching.jsx'
@@ -33,7 +32,6 @@ function Home() {
       <Navbar />
       <main>
         <Hero />
-        <ImpactStats />
         <HowItWorks />
         <About />
         <Causes />
